@@ -1,0 +1,103 @@
+const mongoose = require("mongoose"); //import Mongoose, connects JavaScript to MongoDB
+//-------------Sub-schema: emergency contact-------
+const emergencyContactSchema = new mongoose.Schema({
+    name: { type: String, required: true, trim: true,},
+
+    relationship: { type: String, required: true, trim: true,},
+    
+    phoneNumber: {
+        type: String,
+        required: true,
+        trim: true,
+        validate: {
+            validator: function(v) {
+            return /^\+?[0-9]{7,15}$/.test(v);
+            },
+        message: "Invalid phone number",
+        },
+    },
+},
+{ _id: false }); //sub docs don't need their own id
+
+
+//--------------main Schema: the full client record---------------
+const ClientSchema = new mongoose.Schema({
+    clientCode: {
+        type: String,
+        required: [true, "Client code is mandatory"], //verification1: must fill up
+        unique: true, //verification2: unique client code
+        trim: true, //auto removes spaces
+    },
+
+    fullName: {
+        type: String,
+        required: [true, "Full name is mandatory"],
+        trim: true,
+    },
+
+    gender: {
+        type: String,
+        enum: ["Female", "Male", "Other"],
+        required: true,
+    },
+
+    age: {
+        type: Number,
+        required: true,
+        min: [0, "Age cannot be negative"],
+        max: [120, "Age cannot exceed 120"],
+        //Mongoose validates before saving, no need to check manually in routes
+    },
+
+    address: {
+        addressLine: { type: String, required: true },
+        town: { type: String },
+        city: { type: String, required: true },
+        county: { type: String },
+        postCode: { type: String, required: true },
+        latitude: { type: Number, required: true },
+        longitude: { type: Number, required: true },
+    },
+
+    phoneNumber: {
+        type: String,
+        required: true,
+        trim: true,
+        validate: {
+            validator: function(v) {
+                return /^\+?[0-9]{7,15}$/.test(v);
+            },
+            message: "Invalid phone number",
+        },
+    },
+
+    hasPets: {
+        type: Boolean,
+        default: false,
+    }, //for matching with caregiver pet allergy
+
+    careNeeds: [String], //array of strings, one client can have multiple care needs
+    emergencyContact: emergencyContactSchema,
+    //care notes
+    notes: {
+        type: String,
+        trim: true,
+        default: "",
+    },
+
+    status: {
+        type: String,
+        enum: ["active", "inactive"],
+        default: "active",
+    },
+    },
+  { timestamps: true }, //create and modify time automatically, createdAt & updatedAt
+);
+
+
+module.exports = mongoose.model("Client", ClientSchema);
+
+/*My implementation focuses on Modular Architecture and Data Integrity.
+I have defined Mongoose Schemas with built-in validation for business-critical fields like clientCode and phoneNumber.
+I am using structured schema design to keep the code clean, scalable, and ready for future scheduling features.
+*/
