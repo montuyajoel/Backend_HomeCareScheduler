@@ -23,9 +23,9 @@ const LOCATION_RADIUS_METERS = 200;
 //each document in the Schedule collection is a shift.
 // "all of today's shifts combined " means a caregiver's full schedule for today
 
-const {ObjectId} = require('mongodb');
+const { ObjectId } = require('mongodb');
 const getCaregiverByUserId = async (userId) => {
-    return await Caregiver.findOne({ userId: new ObjectId(userId)});
+    return await Caregiver.findOne({ userId: new ObjectId(userId) });
 };//helper
 
 //helper function to get the shift start date-time as a Date object
@@ -49,91 +49,90 @@ function getShiftEndDate(shift) {
 
 const getTodayShifts = async (req, res) => {
     try {
-            //const userId = req.user._id; //current login user Id, not the caregiver ID
-            const userId = req.user.id;
-            const caregiver = await getCaregiverByUserId(userId);
+        //const userId = req.user._id; //current login user Id, not the caregiver ID
+        const userId = req.user.id;
+        const caregiver = await getCaregiverByUserId(userId);
 
-            console.log('===getTodayShifts===', caregiver ,'=====', userId)
-            if (!caregiver) {
-                return res.status(404).json({
-                    success: false, message: "Caregiver profile not found for this account",
-                    code: "CAREGIVER_NOT_FOUND",
-                })
-            }
-
-            const caregiverId = caregiver._id; //the actual Caregiver ID for querying Schedule
-
-            const startOfDay =new Date();
-            startOfDay.setHours(0, 0, 0, 0);
-
-            const endOfDay = new Date();
-            endOfDay.setHours(23, 59, 59, 999);
-
-            //sorted ascending by start time, earliest shift appears first
-            const shifts = await Schedule.find({
-                caregiver: caregiverId,
-                date: { $gte: startOfDay, $lte: endOfDay },
+        console.log('===getTodayShifts===', caregiver, '=====', userId)
+        if (!caregiver) {
+            return res.status(404).json({
+                success: false, message: "Caregiver profile not found for this account",
+                code: "CAREGIVER_NOT_FOUND",
             })
-                .populate("client", "fullName clientCode address") //never populate phone field-privacy rule
-                .sort({ startTime: 1 });
-            //.populate("client", "fullName clientCode address") targets only that one field,
-            // it looks up the Client collection using that ID
-            // and replaces the reference with the actual client data
-            //(limited to fullName, clientCode, address).
-            //It does not touch startTime, endTime, caregiver, or date — those stay exactly as they were on the Schedule document.
-
-            console.log("测试2：拿到shiftId了吗 ======1111111111");
-            const ShiftIds = shifts.map((s) => s._id); 
-            const visitLogs = await VisitLog.find({ schedule: { $in: ShiftIds } });
-            const now = new Date();
-
-            const result = shifts.map((shift) => {
-                const log = visitLogs.find((v) => v.schedule.toString() === shift._id.toString() );
-
-                /*const [startHour, startMinute] = shift.startTime.split(":").map(Number);
-                const shiftStart = new Date(shift.date);
-                shiftStart.setHours(startHour, startMinute, 0, 0);
-
-                const [endHour, endMinute] = shift.endTime.split(":").map(Number);
-                const shiftEnd = new Date(shift.date);
-                shiftEnd.setHours(endHour, endMinute, 0, 0);*/
-
-                const shiftStart = getShiftStartDate(shift);
-                //shiftStart.setHours(startHour, startMinute, 0, 0);
-
-                const earliestEnabledTime = new Date(shiftStart);
-                earliestEnabledTime.setMinutes(earliestEnabledTime.getMinutes() - CLOCK_IN_BUTTON_LEAD_MINUTES);
-
-                const isClockInTimeEnabled = now >= earliestEnabledTime;
-
-                return {
-                    scheduleId: shift._id,//
-                    client: shift.client,
-                    startTime: shift.startTime,
-                    endTime: shift.endTime,
-                    hasClockedIn: !!log?.clockIn?.time,
-                    hasClockedOut: !!log?.clockOut?.time,
-                    status: log?.status || null, //"in-progress" or "completed" or null
-                    visitLogId: log?._id || null,
-                    isClockInTimeEnabled, //frontend uses this directly for the disabled-button hint text, so don't need to recalculate
-                    earliestEnabledTimeFormatted: earliestEnabledTime.toLocaleString("en-GB"),
-
-                };
-            })
-            .filter((shift) => !shift.hasClockedOut);//remove the completed(clocked-out) shifts from the list
-            
-            //distinguish "no shifts today" from "all shifts already completed"
-            if (result.length === 0) {
-                return res.status(200).json({
-                    success: true, data: [], message: shifts.length === 0 ? "NO shifts today." : "All shifts completed for today.",
-
-                });
-            }
-
-            res.status(200).json({ success: true, data: result });
-        } catch (error) {
-            res.status(500).json({ success: false, message: error.message });
         }
+
+        const caregiverId = caregiver._id; //the actual Caregiver ID for querying Schedule
+
+        const startOfDay = new Date();
+        startOfDay.setHours(0, 0, 0, 0);
+
+        const endOfDay = new Date();
+        endOfDay.setHours(23, 59, 59, 999);
+
+        //sorted ascending by start time, earliest shift appears first
+        const shifts = await Schedule.find({
+            caregiver: caregiverId,
+            date: { $gte: startOfDay, $lte: endOfDay },
+        })
+            .populate("client", "fullName clientCode address") //never populate phone field-privacy rule
+            .sort({ startTime: 1 });
+        //.populate("client", "fullName clientCode address") targets only that one field,
+        // it looks up the Client collection using that ID
+        // and replaces the reference with the actual client data
+        //(limited to fullName, clientCode, address).
+        //It does not touch startTime, endTime, caregiver, or date — those stay exactly as they were on the Schedule document.
+
+        const ShiftIds = shifts.map((s) => s._id);
+        const visitLogs = await VisitLog.find({ schedule: { $in: ShiftIds } });
+        const now = new Date();
+
+        const result = shifts.map((shift) => {
+            const log = visitLogs.find((v) => v.schedule.toString() === shift._id.toString());
+
+            /*const [startHour, startMinute] = shift.startTime.split(":").map(Number);
+            const shiftStart = new Date(shift.date);
+            shiftStart.setHours(startHour, startMinute, 0, 0);
+
+            const [endHour, endMinute] = shift.endTime.split(":").map(Number);
+            const shiftEnd = new Date(shift.date);
+            shiftEnd.setHours(endHour, endMinute, 0, 0);*/
+
+            const shiftStart = getShiftStartDate(shift);
+            //shiftStart.setHours(startHour, startMinute, 0, 0);
+
+            const earliestEnabledTime = new Date(shiftStart);
+            earliestEnabledTime.setMinutes(earliestEnabledTime.getMinutes() - CLOCK_IN_BUTTON_LEAD_MINUTES);
+
+            const isClockInTimeEnabled = now >= earliestEnabledTime;
+
+            return {
+                scheduleId: shift._id,//
+                client: shift.client,
+                startTime: shift.startTime,
+                endTime: shift.endTime,
+                hasClockedIn: !!log?.clockIn?.time,
+                hasClockedOut: !!log?.clockOut?.time,
+                status: log?.status || null, //"in-progress" or "completed" or null
+                visitLogId: log?._id || null,
+                isClockInTimeEnabled, //frontend uses this directly for the disabled-button hint text, so don't need to recalculate
+                earliestEnabledTimeFormatted: earliestEnabledTime.toLocaleString("en-GB"),
+
+            };
+        })
+            .filter((shift) => !shift.hasClockedOut);//remove the completed(clocked-out) shifts from the list
+
+        //distinguish "no shifts today" from "all shifts already completed"
+        if (result.length === 0) {
+            return res.status(200).json({
+                success: true, body: [], message: shifts.length === 0 ? "NO shifts today." : "All shifts completed for today.",
+
+            });
+        }
+
+        res.status(200).json({ success: true, body: result });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
 };
 
 
@@ -142,9 +141,9 @@ const getTodayShifts = async (req, res) => {
 //console.log("==========Clock In ==================");
 const clockIn = async (req, res) => {
     try {
-        console.log("request------>>", req);
-        console.log("req.userId------------>>", req.user.id);
-        const {  scheduleId, clientId, latitude, longitude, note } = req.body;
+        //console.log("request------>>", req);
+        //console.log("req.userId------------>>", req.user.id);
+        const { scheduleId, clientId, latitude, longitude, note } = req.body;
         const userId = req.user.id;//currently logged-in account's user ID
 
         console.log("req.user = ", req.user);
@@ -153,7 +152,7 @@ const clockIn = async (req, res) => {
 
         console.log("userId =", userId);
         console.log("typeof userId =", typeof userId);
-    
+
         const caregiver = await getCaregiverByUserId(userId);
         console.log("caregiver found =", caregiver ? caregiver._id.toString() : null);
         console.log("------>", caregiver)
@@ -171,7 +170,7 @@ const clockIn = async (req, res) => {
         console.log("shift.caregiver =", shift ? shift.caregiver.toString() : null);
         console.log("caregiverId =", caregiverId.toString());
 
- //       console.log("========================");
+        //       console.log("========================");
 
         if (!shift) {
             return res.status(404).json({
@@ -183,7 +182,7 @@ const clockIn = async (req, res) => {
 
         //---------1. Confirm this shift is actually assigned to the caregiver,
         // prevents caregiver using other's scheduleID----------------
-        if (shift.caregiver.toString()!== caregiverId.toString()) {
+        if (shift.caregiver.toString() !== caregiverId.toString()) {
             return res.status(403).json({
                 success: false, message: "This shift is not assigned to you.",
                 code: "NOT_YOUR_SHIFT",
@@ -206,7 +205,7 @@ const clockIn = async (req, res) => {
         const isSameDay = today.getFullYear() === shiftDate.getFullYear() &&
             today.getMonth() === shiftDate.getMonth() &&
             today.getDate() === shiftDate.getDate();
-        
+
         if (!isSameDay) {
             return res.status(400).json({
                 success: false, message: "This shift is not scheduled for today.",
@@ -216,7 +215,7 @@ const clockIn = async (req, res) => {
 
         // this shift only can be clocked in once.
         //If a VIsitLog already exists with status "in- progress", block the duplicate attempt
-        const existingVisit = await VisitLog.findOne({schedule: shift._id});
+        const existingVisit = await VisitLog.findOne({ schedule: shift._id });
 
         console.log("existingVisit found =", existingVisit ? existingVisit._id.toString() : null);
         console.log("existingVisit.status =", existingVisit ? existingVisit.status : null);
@@ -245,7 +244,7 @@ const clockIn = async (req, res) => {
             },
         });*/
 
-        
+
 
         const now = new Date();
         const shiftStart = getShiftStartDate(shift);
@@ -256,7 +255,7 @@ const clockIn = async (req, res) => {
 
         //---------3. early clock-in restriction ,hard button- disable check, at most early 20mins-----------------
         const earliestEnabledTime = new Date(shiftStart);
-        earliestEnabledTime.setMinutes( earliestEnabledTime.getMinutes() - CLOCK_IN_BUTTON_LEAD_MINUTES);
+        earliestEnabledTime.setMinutes(earliestEnabledTime.getMinutes() - CLOCK_IN_BUTTON_LEAD_MINUTES);
 
         //backend double check, against bypassing the fronted and calling the API directly
         //(fronted button is already disabled)
@@ -309,14 +308,14 @@ const clockIn = async (req, res) => {
                 exceptionType: ["late-clock-in"],
             });
         }
-    //-----------6 Create VisitLog --------------
+        //-----------6 Create VisitLog --------------
         const flaggedLate = !isWithinOnTimeWindow && isLate;
 
         const newVisit = new VisitLog({
             schedule: shift._id,
             caregiver: caregiverId, client: clientId,
-            clockIn: { time: now, location: { latitude, longitude },},
-            clockOut: { time: null, location:{latitude:null, longitude:null}},
+            clockIn: { time: now, location: { latitude, longitude }, },
+            clockOut: { time: null, location: { latitude: null, longitude: null } },
             status: "in-progress", isException: flaggedLate,
             exceptionType: flaggedLate ? ["late-clock-in"] : [],//？？？？？？？？？
             note: flaggedLate ? note : undefined,
@@ -340,10 +339,10 @@ const clockIn = async (req, res) => {
 const clockOut = async (req, res) => {
     try {
 
-        console.log('clockout-------->>',req.body)
+        // console.log('clockout-------->>', req.body)
         //const { visitId, latitude, longitude } = req.body;
-        console.log("req.userId------------>>", req.user.id);
-        const {  visitId, clientId, latitude, longitude, note } = req.body;
+        // console.log("req.userId------------>>", req.user.id);
+        const { visitId, clientId, latitude, longitude, note } = req.body;
         const userId = req.user.id;//currently logged-in account's user ID
         const caregiver = await getCaregiverByUserId(userId);
 
@@ -357,11 +356,11 @@ const clockOut = async (req, res) => {
         }
 
         const caregiverId = caregiver._id;
-        console.log('caregiverId-----------', caregiverId)
+        //console.log('caregiverId-----------', caregiverId)
 
         const visit = await VisitLog.findById(visitId).populate({ path: "schedule", populate: { path: "client" }, })
-        console.log('visitId-----------', visitId)
-        console.log('visitLog-----------', visit)
+        //console.log('visitId-----------', visitId)
+        //console.log('visitLog-----------', visit)
         if (!visit) {
             return res.status(404).json({ success: false, message: "Visit not found." });
         }
@@ -382,7 +381,7 @@ const clockOut = async (req, res) => {
 
         const shift = visit.schedule;
         const now = new Date();
-        
+
         //------------3.Location check (hard rule, 200m radius, no note bypass)--------------
         // Clock-out follows the same hard 200m location rule
         const clientLat = shift.client.address?.latitude;
@@ -404,8 +403,8 @@ const clockOut = async (req, res) => {
         //No note can bypass this.  The caregiver must be within 200m of the client to clock out.
         if (distance > LOCATION_RADIUS_METERS) {
             return res.status(400).json({
-                    success: false, message: "Your location is too far from the target. Please check your location.", 
-                    code: "LOCATION_TOO_FAR",
+                success: false, message: "Your location is too far from the target. Please check your location.",
+                code: "LOCATION_TOO_FAR",
             });
         }
         //-------------4. time deviation check (only reached if location already passed) ----
@@ -420,7 +419,7 @@ const clockOut = async (req, res) => {
         const durationMs = now - visit.clockIn.time;
         const durationMinutes = Math.round(durationMs / 1000 / 60);
 
-        visit.clockOut = { time: now, location: { latitude:latitude, longitude:longitude }};
+        visit.clockOut = { time: now, location: { latitude: latitude, longitude: longitude } };
         visit.durationMinutes = durationMinutes;
 
         const minutesFromEnd = (now - shiftEnd) / 1000 / 60;
@@ -435,7 +434,7 @@ const clockOut = async (req, res) => {
             isWithinOnTimeWindow=${isWithinOnTimeWindow},
             isLate=${isLate},
             isEarly=${isEarly}`);
-        
+
         // If outside after the on-time window, classified as "late", and no note provided -> require note
         if (!isWithinOnTimeWindow && isLate && (!note || note.trim() === "")) {
             return res.status(400).json({

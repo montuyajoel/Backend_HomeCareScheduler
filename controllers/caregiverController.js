@@ -1,6 +1,7 @@
 //-----------Business Logic-----------
 //server/controllers/caregiverController.js
 const Caregiver = require("../models/Caregiver");
+const ComputeTravelTime = require("../utils/calculateTravelTime")
 
 //--------Create a new caregiver--------
 //controller handles request logic & database save
@@ -21,7 +22,7 @@ const createCaregiver = async (req, res) => {
             skills,
             availability,
             status,
-    });
+        });
 
         const saved = await newCaregiver.save();
         res.status(201).json({ success: true, data: saved });
@@ -67,7 +68,7 @@ const updateCaregiver = async (req, res) => {
         const updatedCaregiver = await Caregiver.findOneAndUpdate(
             { employeeCode: caregiverId },
             updateData,
-            { new: true } // Return the updated document
+            { new: true, runValidators: true } // Return the updated document
         );
 
         if (!updatedCaregiver) {
@@ -92,14 +93,40 @@ const deleteCaregiver = async (req, res) => {
             return res.status(404).json({ success: false, message: "Caregiver not found" });
         }
 
-        res.status(200).json({ success: true, 
+        res.status(200).json({
+            success: true,
             employeeCode: deletedCaregiver.employeeCode,
-            message: "Caregiver deleted successfully" });
+            message: "Caregiver deleted successfully"
+        });
     } catch (error) {
         console.error("Error deleting caregiver:", error);
         res.status(500).json({ success: false, message: error.message });
     }
 };
 
+const computeTravel = async (req, res) => {
+    try {
+        const { origin, destination } = req.body
 
-module.exports = { createCaregiver, getAllCaregivers, getByCareGiverID, updateCaregiver, deleteCaregiver };
+        if (!origin || !destination) {
+            res.status(500).json({
+                success: false,
+                message: "Origin or desitnation coordinate is missing from the request."
+            });
+        } else {
+            const travelDuration = await ComputeTravelTime(origin, destination)
+
+            res.status(200).json({
+                success: true,
+                body: travelDuration
+            });
+
+        }
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+
+}
+
+
+module.exports = { createCaregiver, getAllCaregivers, getByCareGiverID, updateCaregiver, deleteCaregiver, computeTravel };
