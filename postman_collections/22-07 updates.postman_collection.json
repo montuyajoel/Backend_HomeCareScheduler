@@ -1,0 +1,4213 @@
+{
+  "info": {
+    "_postman_id": "7ed0a77f-3a85-49ca-b8ab-80c2f6957ada",
+    "name": "HomeCare Scheduler Visit Tests",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "14832489"
+  },
+  "item": [
+    {
+      "name": "Visit",
+      "item": [
+        {
+          "name": "visits/clock-out",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{auth_secret_0yu8}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"visitId\":\"6a5ca8fc5c13d2b6d408e1f2\",\r\n  \"scheduleId\": \"6a5ca84b705047769d25ca5b\",\r\n  \"clientId\": \"6a41d76b3b1ec85f79aef5c1\",\r\n  \"latitude\": 53.3718307,\r\n  \"longitude\": -6.1793446,\r\n  \"note\": \"\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:5001/api/visits/clock-out",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5001",
+              "path": [
+                "api",
+                "visits",
+                "clock-out"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Left 20 Mins Early",
+              "originalRequest": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"visitId\":\"6a5a3b645cf1d19dabe36bb0\",\r\n  \"scheduleId\": \"6a5a29e5628bc3c237c6b525\",\r\n  \"clientId\": \"6a5a27f8628bc3c237c6b523\",\r\n  \"latitude\": 53.2930665,\r\n  \"longitude\": -6.1318371,\r\n  \"note\": \"\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "http://localhost:5000/api/visits/clock-out",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "5000",
+                  "path": [
+                    "api",
+                    "visits",
+                    "clock-out"
+                  ]
+                }
+              },
+              "code": 200,
+              "_postman_previewlanguage": "",
+              "header": [],
+              "cookie": [
+                {
+                  "expires": "Invalid Date",
+                  "domain": "",
+                  "path": ""
+                }
+              ],
+              "body": "{\n    \"success\": true,\n    \"data\": {\n        \"schedule\": \"6a5ca84b705047769d25ca5b\",\n        \"caregiver\": \"6a41b60b3b1ec85f79aef5b9\",\n        \"client\": \"6a41d76b3b1ec85f79aef5c1\",\n        \"clockIn\": {\n            \"time\": \"2026-07-19T10:46:10.781Z\",\n            \"location\": {\n                \"latitude\": 53.3718307,\n                \"longitude\": -6.1793446\n            }\n        },\n        \"clockOut\": {\n            \"time\": null,\n            \"location\": {\n                \"latitude\": null,\n                \"longitude\": null\n            }\n        },\n        \"status\": \"in-progress\",\n        \"isException\": true,\n        \"exceptionType\": [\n            \"late-clock-out\"\n        ],\n        \"note\": \"Client declined.\",\n        \"reviewRequired\": \"true\",\n        \"_id\": \"6a5caaf2c47eaeb2ab6bf91a\",\n        \"createdAt\": \"2026-07-19T10:46:10.787Z\",\n        \"updatedAt\": \"2026-07-19T10:46:10.787Z\",\n        \"__v\": 0\n    }\n}"
+            },
+            {
+              "name": "400 - reclocked-out",
+              "originalRequest": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"visitId\":\"6a5ca8fc5c13d2b6d408e1f2\",\r\n  \"scheduleId\": \"6a5ca84b705047769d25ca5b\",\r\n  \"clientId\": \"6a41d76b3b1ec85f79aef5c1\",\r\n  \"latitude\": 53.3718307,\r\n  \"longitude\": -6.1793446,\r\n  \"note\": \"Client declined.\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "http://localhost:5001/api/visits/clock-out",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "5001",
+                  "path": [
+                    "api",
+                    "visits",
+                    "clock-out"
+                  ]
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "",
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "97"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"61-f9Z07GTT3CfghDxz6oAjRKC1Rr4\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Sun, 19 Jul 2026 10:48:01 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [
+                {
+                  "expires": "Invalid Date",
+                  "domain": "",
+                  "path": ""
+                }
+              ],
+              "body": "{\n    \"success\": false,\n    \"message\": \"This visit has already been clocked out.\",\n    \"code\": \"ALREADY_COMPLETED\"\n}"
+            },
+            {
+              "name": "400 - Note Required",
+              "originalRequest": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"visitId\":\"6a5ca8fc5c13d2b6d408e1f2\",\r\n  \"scheduleId\": \"6a5ca84b705047769d25ca5b\",\r\n  \"clientId\": \"6a41d76b3b1ec85f79aef5c1\",\r\n  \"latitude\": 53.3718307,\r\n  \"longitude\": -6.1793446,\r\n  \"note\": \"\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "http://localhost:5001/api/visits/clock-out",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "5001",
+                  "path": [
+                    "api",
+                    "visits",
+                    "clock-out"
+                  ]
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "",
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "192"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"c0-ThqK/EMyayDsMODHnuU1SYqv4fA\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Sun, 19 Jul 2026 10:53:25 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [
+                {
+                  "expires": "Invalid Date",
+                  "domain": "",
+                  "path": ""
+                }
+              ],
+              "body": "{\n    \"success\": false,\n    \"message\": \"You are clocking out more than 20 minutes before the shift end time. Please provide a note to continue.\",\n    \"code\": \"NOTE_REQUIRED\",\n    \"exceptionType\": [\n        \"early-clock-out\"\n    ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "clock-in-false-too far location",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{json_web_token_060h}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"scheduleId\": \"6a590a86f2b6d87e76dc21e2\",\r\n  \"clientId\": \"6a41d76b3b1ec85f79aef5c1\",\r\n  \"latitude\": 53.2993,\r\n  \"longitude\": -6.1889,\r\n  \"note\": \"\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:5000/api/visits/clock-in",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5000",
+              "path": [
+                "api",
+                "visits",
+                "clock-in"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "clock-in-false-visitlog validation",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{auth_secret_0yu8}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"scheduleId\": \"6a5a29e5628bc3c237c6b525\",\r\n  \"clientId\": \"6a5a27f8628bc3c237c6b523\",\r\n  \"latitude\": 53.29306654457099,\r\n  \"longitude\": -6.131837135581937,\r\n  \"note\": \"\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:5000/api/visits/clock-in",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5000",
+              "path": [
+                "api",
+                "visits",
+                "clock-in"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "clock-in-false-visitlog validation-reviewRequired",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{auth_secret_0yu8}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"scheduleId\": \"6a5a29e5628bc3c237c6b525\",\r\n  \"clientId\": \"6a5a27f8628bc3c237c6b523\",\r\n  \"latitude\": 53.2930665,\r\n  \"longitude\": -6.1318371,\r\n  \"note\": \"\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:5000/api/visits/clock-in",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5000",
+              "path": [
+                "api",
+                "visits",
+                "clock-in"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "clock-in-true",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{auth_secret_0yu8}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"scheduleId\": \"6a5ca84b705047769d25ca5b\",\r\n  \"clientId\": \"6a41d76b3b1ec85f79aef5c1\",\r\n  \"latitude\": 53.3718307,\r\n  \"longitude\": -6.1793446,\r\n  \"note\": \"\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:5001/api/visits/clock-in",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5001",
+              "path": [
+                "api",
+                "visits",
+                "clock-in"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "clock-in-true Copy",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{auth_secret_0yu8}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"scheduleId\": \"6a5b8def628bc3c237c6b547\",\r\n  \"clientId\": \"6a5b8ce2628bc3c237c6b545\",\r\n  \"latitude\": 53.35496292579356,  \r\n  \"longitude\": -6.27886403055761,\r\n  \"note\": \"\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:5000/api/visits/clock-in",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5000",
+              "path": [
+                "api",
+                "visits",
+                "clock-in"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "clock-out-true-without location and time check",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{auth_secret_0yu8}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"visitId\":\"6a5a3b645cf1d19dabe36bb0\",\r\n  \"scheduleId\": \"6a5a29e5628bc3c237c6b525\",\r\n  \"clientId\": \"6a5a27f8628bc3c237c6b523\",\r\n  \"latitude\": 53.2930665,\r\n  \"longitude\": -6.1318371,\r\n  \"note\": \"\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:5000/api/visits/clock-out",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5000",
+              "path": [
+                "api",
+                "visits",
+                "clock-out"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "clock-out-false-visit not found",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{auth_secret_0yu8}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"scheduleId\": \"6a5b8def628bc3c237c6b547\",\r\n  \"clientId\": \"6a5b8ce2628bc3c237c6b545\",\r\n  \"latitude\": 53.35496292579356,\r\n  \"longitude\": -6.27886403055761,\r\n  \"note\": \"shift3\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:5000/api/visits/clock-out",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5000",
+              "path": [
+                "api",
+                "visits",
+                "clock-out"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "clock-in-true-shiftnot fortoday-shift3",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{json_web_token_0cqw}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"scheduleId\": \"6a5b8def628bc3c237c6b547\",\r\n  \"clientId\": \"6a5b8ce2628bc3c237c6b545\",\r\n  \"latitude\": 53.35496292579356,\r\n  \"longitude\": -6.27886403055761,\r\n  \"note\": \"\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:5000/api/visits/clock-in",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5000",
+              "path": [
+                "api",
+                "visits",
+                "clock-in"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "clock-in-true-shift fortoday",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{supabase_service_role_api_key_0cqw}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"scheduleId\": \"6a5b8def628bc3c237c6b547\",\r\n  \"clientId\": \"6a5b8ce2628bc3c237c6b545\",\r\n  \"latitude\": 53.35496292579356,\r\n  \"longitude\": -6.27886403055761,\r\n  \"note\": \"shift3 for today\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:5000/api/visits/clock-in",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5000",
+              "path": [
+                "api",
+                "visits",
+                "clock-in"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "clock-in-true-shift fortoday Copy",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{supabase_service_role_api_key_0cqw}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"scheduleId\": \"6a5b8def628bc3c237c6b547\",\r\n  \"clientId\": \"6a5b8ce2628bc3c237c6b545\",\r\n  \"latitude\": 53.35496292579356,\r\n  \"longitude\": -6.27886403055761,\r\n  \"note\": \"shift3 for today\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:5000/api/visits/clock-in",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5000",
+              "path": [
+                "api",
+                "visits",
+                "clock-in"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "clock-in-false-late more than 20mins-shift3",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{json_web_token_0cqw}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"scheduleId\": \"6a5b8def628bc3c237c6b547\",\r\n  \"clientId\": \"6a5b8ce2628bc3c237c6b545\",\r\n  \"latitude\": 53.35496292579356,\r\n  \"longitude\": -6.27886403055761,\r\n  \"note\": \"ee888\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:5000/api/visits/clock-in",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5000",
+              "path": [
+                "api",
+                "visits",
+                "clock-in"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "clock-in-false-shift is in-process, cannot clock in",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{json_web_token_0cqw}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"scheduleId\": \"6a5b8def628bc3c237c6b547\",\r\n  \"clientId\": \"6a5b8ce2628bc3c237c6b545\",\r\n  \"latitude\": 53.35496292579356,\r\n  \"longitude\": -6.27886403055761,\r\n  \"note\": \"\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:5000/api/visits/clock-in",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5000",
+              "path": [
+                "api",
+                "visits",
+                "clock-in"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "clock-in-false-shift not for today",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{json_web_token_0cqw}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"scheduleId\": \"6a5b8def628bc3c237c6b547\",\r\n  \"clientId\": \"6a5b8ce2628bc3c237c6b545\",\r\n  \"latitude\": 53.35496292579356,\r\n  \"longitude\": -6.27886403055761,\r\n  \"note\": \"\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:5000/api/visits/clock-in",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5000",
+              "path": [
+                "api",
+                "visits",
+                "clock-in"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "clock-in-false-late more than 20mins",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{json_web_token_0cqw}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"scheduleId\": \"6a5b8def628bc3c237c6b547\",\r\n  \"clientId\": \"6a5b8ce2628bc3c237c6b545\",\r\n  \"latitude\": 53.35496292579356,\r\n  \"longitude\": -6.27886403055761,\r\n  \"note\": \"\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:5000/api/visits/clock-in",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5000",
+              "path": [
+                "api",
+                "visits",
+                "clock-in"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Client",
+      "item": [
+        {
+          "name": "Get All Clients",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{json_web_token_060h}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5001/api/clients",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5001",
+              "path": [
+                "api",
+                "clients"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "403 - Admin Only",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "http://localhost:5001/api/clients",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "5001",
+                  "path": [
+                    "api",
+                    "clients"
+                  ]
+                }
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "56"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"38-R4/xjJp/Xy2llynaXDbDG5MToW8\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Mon, 20 Jul 2026 16:45:41 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"success\": false,\n    \"message\": \"Access denied. Admin only.\"\n}"
+            },
+            {
+              "name": "200 - Get All Clients",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "http://localhost:5001/api/clients",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "5001",
+                  "path": [
+                    "api",
+                    "clients"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "1754"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"6da-dqplAAdTqyk9KYm4M1+V7I3JXc8\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Mon, 20 Jul 2026 18:17:46 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"status\": \"success\",\n    \"body\": [\n        {\n            \"address\": {\n                \"addressLine\": \"St Anne's Park\",\n                \"town\": \"Clontarf East Raheny\",\n                \"city\": \"Dublin\",\n                \"county\": \"Dublin\",\n                \"postCode\": \"D05 EA31\",\n                \"latitude\": 53.3718307,\n                \"longitude\": -6.1793446\n            },\n            \"_id\": \"6a41d76b3b1ec85f79aef5c1\",\n            \"clientCode\": \"CLT001\",\n            \"fullName\": \"Mary Snow\",\n            \"gender\": \"Female\",\n            \"age\": 78,\n            \"phoneNumber\": \"+353851112222\",\n            \"hasPets\": true,\n            \"careNeeds\": [\n                \"Personal Care\",\n                \"Meal Preparation\",\n                \"Medication Support\"\n            ],\n            \"emergencyContact\": {\n                \"name\": \"Anna Snow\",\n                \"relationship\": \"Daughter\",\n                \"phoneNumber\": \"+353861234567\"\n            },\n            \"notes\": \"Mild dementia. Needs morning medication reminder.\",\n            \"status\": \"active\"\n        },\n        {\n            \"address\": {\n                \"addressLine\": \"Lexlcon Library\",\n                \"town\": \"Queen's Rd, Dún Laoghaire\",\n                \"city\": \"Dublin\",\n                \"county\": \"Dublin\",\n                \"postCode\": \"A96 H283\",\n                \"latitude\": 53.29306654457099,\n                \"longitude\": -6.131837135581937\n            },\n            \"_id\": \"6a5a27f8628bc3c237c6b523\",\n            \"clientCode\": \"CLT002\",\n            \"fullName\": \"Joey Snow\",\n            \"gender\": \"Male\",\n            \"age\": 66,\n            \"phoneNumber\": \"+353851112223\",\n            \"hasPets\": true,\n            \"careNeeds\": [\n                \"Personal Care\",\n                \"Meal Preparation\",\n                \"Medication Support\"\n            ],\n            \"emergencyContact\": {\n                \"name\": \"Tom Snow\",\n                \"relationship\": \"Son\",\n                \"phoneNumber\": \"+353861234560\"\n            },\n            \"notes\": \"Mild dementia. Needs morning medication reminder.\",\n            \"status\": \"active\"\n        },\n        {\n            \"address\": {\n                \"addressLine\": \"Grangegorman Lower\",\n                \"town\": \" \",\n                \"city\": \"Dublin 7\",\n                \"county\": \"Dublin\",\n                \"postCode\": \"D07 H6K8\",\n                \"latitude\": 53.35496292579356,\n                \"longitude\": -6.27886403055761\n            },\n            \"_id\": \"6a5b8ce2628bc3c237c6b545\",\n            \"clientCode\": \"CLT003\",\n            \"fullName\": \"Andy Smith\",\n            \"gender\": \"Male\",\n            \"age\": 68,\n            \"phoneNumber\": \"+353851112233\",\n            \"hasPets\": true,\n            \"careNeeds\": [\n                \"Personal Care\",\n                \"Meal Preparation\",\n                \"Medication Support\"\n            ],\n            \"emergencyContact\": {\n                \"name\": \"Anna Smith\",\n                \"relationship\": \"Daughter\",\n                \"phoneNumber\": \"+353861234500\"\n            },\n            \"notes\": \"Mild dementia. Needs morning medication reminder.\",\n            \"status\": \"active\"\n        }\n    ]\n}"
+            },
+            {
+              "name": "404 - No Clients in the Database",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "http://localhost:5001/api/clients",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "5001",
+                  "path": [
+                    "api",
+                    "clients"
+                  ]
+                }
+              },
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "66"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"42-Z7O3lrrY/ZTdIf+sZ3+qTbCAnvg\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Mon, 20 Jul 2026 18:25:07 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"status\": \"success\",\n    \"message\": \"No clients found in the database.\"\n}"
+            },
+            {
+              "name": "401 - Access Denied",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "http://localhost:5001/api/clients",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "5001",
+                  "path": [
+                    "api",
+                    "clients"
+                  ]
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "63"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"3f-h64EmKSl5EQhyahoAMKWOwlKyoc\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Wed, 22 Jul 2026 15:58:34 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"success\": false,\n    \"message\": \"No token provided. Access denied.\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Specific Client",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{json_web_token_060h}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5001/api/clients/CLT001",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5001",
+              "path": [
+                "api",
+                "clients",
+                "CLT001"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "404 - Client Not Found",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "http://localhost:5001/api/clients/CLT0010",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "5001",
+                  "path": [
+                    "api",
+                    "clients",
+                    "CLT0010"
+                  ]
+                }
+              },
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "58"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"3a-XZvg3JY2MFtVv5Or/S7SERyW/0Y\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Mon, 20 Jul 2026 18:13:55 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"status\": \"failed\",\n    \"message\": \"Client CLT0010 not found.'\"\n}"
+            },
+            {
+              "name": "200 - Client Found",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "http://localhost:5001/api/clients/Mary Snow",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "5001",
+                  "path": [
+                    "api",
+                    "clients",
+                    "Mary Snow"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "597"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"255-1AeNzBNPjO8EnwLACtzPYOAklis\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Mon, 20 Jul 2026 18:14:27 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"status\": \"success\",\n    \"body\": {\n        \"address\": {\n            \"addressLine\": \"St Anne's Park\",\n            \"town\": \"Clontarf East Raheny\",\n            \"city\": \"Dublin\",\n            \"county\": \"Dublin\",\n            \"postCode\": \"D05 EA31\",\n            \"latitude\": 53.3718307,\n            \"longitude\": -6.1793446\n        },\n        \"_id\": \"6a41d76b3b1ec85f79aef5c1\",\n        \"clientCode\": \"CLT001\",\n        \"fullName\": \"Mary Snow\",\n        \"gender\": \"Female\",\n        \"age\": 78,\n        \"phoneNumber\": \"+353851112222\",\n        \"hasPets\": true,\n        \"careNeeds\": [\n            \"Personal Care\",\n            \"Meal Preparation\",\n            \"Medication Support\"\n        ],\n        \"emergencyContact\": {\n            \"name\": \"Anna Snow\",\n            \"relationship\": \"Daughter\",\n            \"phoneNumber\": \"+353861234567\"\n        },\n        \"notes\": \"Mild dementia. Needs morning medication reminder.\",\n        \"status\": \"active\"\n    }\n}"
+            },
+            {
+              "name": "401 - Unauthorised",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "http://localhost:5001/api/clients/CLT001",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "5001",
+                  "path": [
+                    "api",
+                    "clients",
+                    "CLT001"
+                  ]
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "63"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"3f-h64EmKSl5EQhyahoAMKWOwlKyoc\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Wed, 22 Jul 2026 15:58:02 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"success\": false,\n    \"message\": \"No token provided. Access denied.\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Update Client Status",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{json_web_token_060h}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"status\": \"active\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:5001/api/clients/status/CLT001",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5001",
+              "path": [
+                "api",
+                "clients",
+                "status",
+                "CLT001"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "403 - Admin Only",
+              "originalRequest": {
+                "method": "PUT",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"status\": \"inactive\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "http://localhost:5001/api/clients/status/CLT001",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "5001",
+                  "path": [
+                    "api",
+                    "clients",
+                    "status",
+                    "CLT001"
+                  ]
+                }
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "56"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"38-R4/xjJp/Xy2llynaXDbDG5MToW8\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Wed, 22 Jul 2026 14:24:20 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"success\": false,\n    \"message\": \"Access denied. Admin only.\"\n}"
+            },
+            {
+              "name": "200 - Status Update Successful",
+              "originalRequest": {
+                "method": "PUT",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"status\": \"inactive\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "http://localhost:5001/api/clients/status/CLT001",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "5001",
+                  "path": [
+                    "api",
+                    "clients",
+                    "status",
+                    "CLT001"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "634"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"27a-m93c1OPPEZRmI6nZOyf60nKYEdQ\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Wed, 22 Jul 2026 14:30:42 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"success\": true,\n    \"data\": {\n        \"address\": {\n            \"addressLine\": \"St Anne's Park\",\n            \"town\": \"Clontarf East Raheny\",\n            \"city\": \"Dublin\",\n            \"county\": \"Dublin\",\n            \"postCode\": \"D05 EA31\",\n            \"latitude\": 53.3718307,\n            \"longitude\": -6.1793446\n        },\n        \"_id\": \"6a41d76b3b1ec85f79aef5c1\",\n        \"clientCode\": \"CLT001\",\n        \"fullName\": \"Mary Snow\",\n        \"gender\": \"Female\",\n        \"age\": 78,\n        \"phoneNumber\": \"+353851112222\",\n        \"hasPets\": true,\n        \"careNeeds\": [\n            \"Personal Care\",\n            \"Meal Preparation\",\n            \"Medication Support\"\n        ],\n        \"emergencyContact\": {\n            \"name\": \"Anna Snow\",\n            \"relationship\": \"Daughter\",\n            \"phoneNumber\": \"+353861234567\"\n        },\n        \"notes\": \"Mild dementia. Needs morning medication reminder.\",\n        \"status\": \"inactive\",\n        \"updatedAt\": \"2026-07-22T14:30:42.415Z\"\n    }\n}"
+            },
+            {
+              "name": "400 - Incorrect Value",
+              "originalRequest": {
+                "method": "PUT",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"status\": \"in-hospital\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "http://localhost:5001/api/clients/status/CLT001",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "5001",
+                  "path": [
+                    "api",
+                    "clients",
+                    "status",
+                    "CLT001"
+                  ]
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "159"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"9f-qgBf9Q9s55fMmJVowI8nmdzlIA4\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Wed, 22 Jul 2026 14:36:48 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"success\": false,\n    \"message\": \"Failed to update client's status.\",\n    \"error\": \"Validation failed: status: `in-hospital` is not a valid enum value for path `status`.\"\n}"
+            },
+            {
+              "name": "400 - No Status Found",
+              "originalRequest": {
+                "method": "PUT",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"address\": \"in-hospital\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "http://localhost:5001/api/clients/status/CLT001",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "5001",
+                  "path": [
+                    "api",
+                    "clients",
+                    "status",
+                    "CLT001"
+                  ]
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "46"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"2e-AQLgwy8pDZxQN2hvqJ8G4WA4cmY\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Wed, 22 Jul 2026 14:41:19 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"success\": false,\n    \"message\": \"No status found.\"\n}"
+            },
+            {
+              "name": "400 - Status Value not Provided",
+              "originalRequest": {
+                "method": "PUT",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"address\": \"in-hospital\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "http://localhost:5001/api/clients/status/CLT001",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "5001",
+                  "path": [
+                    "api",
+                    "clients",
+                    "status",
+                    "CLT001"
+                  ]
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "79"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"4f-5EHXrbqByeXetcZ1IspTEb+QLAY\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Wed, 22 Jul 2026 14:44:04 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"success\": false,\n    \"message\": \"No status value was provided in the request body.\"\n}"
+            },
+            {
+              "name": "404 - Client Not Found",
+              "originalRequest": {
+                "method": "PUT",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"status\": \"active\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "http://localhost:5001/api/clients/status/CLT00100",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "5001",
+                  "path": [
+                    "api",
+                    "clients",
+                    "status",
+                    "CLT00100"
+                  ]
+                }
+              },
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "47"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"2f-hEJbr0lXPXPyZU0fDh6hna8AdQU\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Wed, 22 Jul 2026 15:56:36 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"success\": false,\n    \"message\": \"Client not found.\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Update Client's Address",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{json_web_token_060h}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"addressLine\": \"St Anne's Park\",\n    \"town\": \"Clontarf East Raheny\",\n    \"city\": \"Dublin\",\n    \"county\": \"Dublin\",\n    \"postCode\": \"D05 EA35\",\n    \"latitude\": 53.3718307,\n    \"longitude\": -6.1793446\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:5001/api/clients/address/CLT001",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5001",
+              "path": [
+                "api",
+                "clients",
+                "address",
+                "CLT001"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "200 - Address Updated",
+              "originalRequest": {
+                "method": "PUT",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"addressLine\": \"St Anne's Park\",\n    \"town\": \"Clontarf East Raheny\",\n    \"city\": \"Dublin\",\n    \"county\": \"Dublin\",\n    \"postCode\": \"D05 EA35\",\n    \"latitude\": 53.3718307,\n    \"longitude\": -6.1793446\n  }",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "http://localhost:5001/api/clients/address/CLT001",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "5001",
+                  "path": [
+                    "api",
+                    "clients",
+                    "address",
+                    "CLT001"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "681"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"2a9-2Ci9s7X8YNcDXcf5G2moRbsbjXM\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Wed, 22 Jul 2026 15:35:05 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"success\": true,\n    \"message\": \"Client address updated successfully.\",\n    \"data\": {\n        \"address\": {\n            \"addressLine\": \"St Anne's Park\",\n            \"town\": \"Clontarf East Raheny\",\n            \"city\": \"Dublin\",\n            \"county\": \"Dublin\",\n            \"postCode\": \"D05 EA35\",\n            \"latitude\": 53.2286312,\n            \"longitude\": -6.1162511\n        },\n        \"_id\": \"6a41d76b3b1ec85f79aef5c1\",\n        \"clientCode\": \"CLT001\",\n        \"fullName\": \"Mary Snow\",\n        \"gender\": \"Female\",\n        \"age\": 78,\n        \"phoneNumber\": \"+353851112222\",\n        \"hasPets\": true,\n        \"careNeeds\": [\n            \"Personal Care\",\n            \"Meal Preparation\",\n            \"Medication Support\"\n        ],\n        \"emergencyContact\": {\n            \"name\": \"Anna Snow\",\n            \"relationship\": \"Daughter\",\n            \"phoneNumber\": \"+353861234567\"\n        },\n        \"notes\": \"Mild dementia. Needs morning medication reminder.\",\n        \"status\": \"active\",\n        \"updatedAt\": \"2026-07-22T15:35:05.177Z\"\n    }\n}"
+            },
+            {
+              "name": "400 - Incorrect Request Body",
+              "originalRequest": {
+                "method": "PUT",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"status\":\"active\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "http://localhost:5001/api/clients/address/CLT001",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "5001",
+                  "path": [
+                    "api",
+                    "clients",
+                    "address",
+                    "CLT001"
+                  ]
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "110"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"6e-c9gqycvBZUV1E1tPL03IyQXydDc\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Wed, 22 Jul 2026 15:37:37 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"success\": false,\n    \"message\": \"Failed to update client's address.\",\n    \"error\": \"Request failed with status code 400\"\n}"
+            },
+            {
+              "name": "400 - Could Not Locate Address",
+              "originalRequest": {
+                "method": "PUT",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"postCode\":\"A96 E5N8\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "http://localhost:5001/api/clients/address/CLT001",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "5001",
+                  "path": [
+                    "api",
+                    "clients",
+                    "address",
+                    "CLT001"
+                  ]
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "152"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"98-VE5RnG4fLCGOQJ93MWZ6wcEto1g\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Wed, 22 Jul 2026 15:40:17 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"success\": false,\n    \"message\": \"Failed to update client's address.\",\n    \"error\": \"Address could not be located. Please check the address details and try again.\"\n}"
+            },
+            {
+              "name": "404 - Client Not Found",
+              "originalRequest": {
+                "method": "PUT",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"postCode\":\"A96 E5N8\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "http://localhost:5001/api/clients/address/CLT00100",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "5001",
+                  "path": [
+                    "api",
+                    "clients",
+                    "address",
+                    "CLT00100"
+                  ]
+                }
+              },
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "47"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"2f-hEJbr0lXPXPyZU0fDh6hna8AdQU\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Wed, 22 Jul 2026 15:57:27 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"success\": false,\n    \"message\": \"Client not found.\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Create New Client Record",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{json_web_token_060h}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"clientCode\": \"CLT004\",\n    \"fullName\": \"John Snow\",\n    \"gender\": \"Male\",\n    \"age\": 101,\n    \"address\": {\n        \"addressLine\": \"St Anne's Park\",\n        \"town\": \"Clontarf East Raheny\",\n        \"city\": \"Dublin\",\n        \"county\": \"Dublin\",\n        \"postCode\": \"D05 EA37\"\n    },\n    \"phoneNumber\": \"+353838119159\",\n    \"hasPets\": true,\n    \"careNeeds\": [\n        \"Personal Care\",\n        \"Meal Preparation\",\n        \"Medication Support\"\n    ],\n    \"emergencyContact\": {\n        \"name\": \"Anna Snow\",\n        \"relationship\": \"Daughter\",\n        \"phoneNumber\": \"+353861234567\"\n    },\n    \"notes\": \"Mild dementia. Needs morning medication reminder.\",\n    \"status\": \"active\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:5001/api/clients",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5001",
+              "path": [
+                "api",
+                "clients"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "401 - Unauthorized",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"clientCode\": \"CLT004\",\n    \"fullName\": \"John Snow\",\n    \"gender\": \"Male\",\n    \"age\": 101,\n    \"address\": {\n        \"addressLine\": \"19 Clarinda Park East\",\n        \"town\": \"\",\n        \"city\": \"Dun Laoghaire\",\n        \"county\": \"Dublin\",\n        \"postCode\": \"A96 E5N8\"\n    },\n    \"phoneNumber\": \"+353838119159\",\n    \"hasPets\": true,\n    \"careNeeds\": [\n        \"Personal Care\",\n        \"Meal Preparation\",\n        \"Medication Support\"\n    ],\n    \"emergencyContact\": {\n        \"name\": \"Anna Snow\",\n        \"relationship\": \"Daughter\",\n        \"phoneNumber\": \"+353861234567\"\n    },\n    \"notes\": \"Mild dementia. Needs morning medication reminder.\",\n    \"status\": \"active\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "http://localhost:5001/api/clients",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "5001",
+                  "path": [
+                    "api",
+                    "clients"
+                  ]
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "63"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"3f-h64EmKSl5EQhyahoAMKWOwlKyoc\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Wed, 22 Jul 2026 17:19:02 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"success\": false,\n    \"message\": \"No token provided. Access denied.\"\n}"
+            },
+            {
+              "name": "201 - Client Created",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"clientCode\": \"CLT004\",\n    \"fullName\": \"John Snow\",\n    \"gender\": \"Male\",\n    \"age\": 101,\n    \"address\": {\n        \"addressLine\": \"St Anne's Park\",\n        \"town\": \"Clontarf East Raheny\",\n        \"city\": \"Dublin\",\n        \"county\": \"Dublin\",\n        \"postCode\": \"D05 EA37\"\n    },\n    \"phoneNumber\": \"+353838119159\",\n    \"hasPets\": true,\n    \"careNeeds\": [\n        \"Personal Care\",\n        \"Meal Preparation\",\n        \"Medication Support\"\n    ],\n    \"emergencyContact\": {\n        \"name\": \"Anna Snow\",\n        \"relationship\": \"Daughter\",\n        \"phoneNumber\": \"+353861234567\"\n    },\n    \"notes\": \"Mild dementia. Needs morning medication reminder.\",\n    \"status\": \"active\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "http://localhost:5001/api/clients",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "5001",
+                  "path": [
+                    "api",
+                    "clients"
+                  ]
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "678"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"2a6-5L8kHEPfqTTc0jesEfJCWiBMYF0\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Wed, 22 Jul 2026 17:31:45 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"success\": true,\n    \"data\": {\n        \"clientCode\": \"CLT004\",\n        \"fullName\": \"John Snow\",\n        \"gender\": \"Male\",\n        \"age\": 101,\n        \"address\": {\n            \"addressLine\": \"St Anne's Park\",\n            \"town\": \"Clontarf East Raheny\",\n            \"city\": \"Dublin\",\n            \"county\": \"Dublin\",\n            \"postCode\": \"D05 EA37\",\n            \"latitude\": 53.2288009,\n            \"longitude\": -6.1179594\n        },\n        \"phoneNumber\": \"+353838119159\",\n        \"hasPets\": true,\n        \"careNeeds\": [\n            \"Personal Care\",\n            \"Meal Preparation\",\n            \"Medication Support\"\n        ],\n        \"emergencyContact\": {\n            \"name\": \"Anna Snow\",\n            \"relationship\": \"Daughter\",\n            \"phoneNumber\": \"+353861234567\"\n        },\n        \"notes\": \"Mild dementia. Needs morning medication reminder.\",\n        \"status\": \"active\",\n        \"_id\": \"6a60fe819f7e5edbc38161cd\",\n        \"createdAt\": \"2026-07-22T17:31:45.113Z\",\n        \"updatedAt\": \"2026-07-22T17:31:45.113Z\",\n        \"__v\": 0\n    }\n}"
+            },
+            {
+              "name": "400 - Client Code Required",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"fullName\": \"John Snow\",\n    \"gender\": \"Male\",\n    \"age\": 101,\n    \"address\": {\n        \"addressLine\": \"St Anne's Park\",\n        \"town\": \"Clontarf East Raheny\",\n        \"city\": \"Dublin\",\n        \"county\": \"Dublin\",\n        \"postCode\": \"D05 EA37\"\n    },\n    \"phoneNumber\": \"+353838119159\",\n    \"hasPets\": true,\n    \"careNeeds\": [\n        \"Personal Care\",\n        \"Meal Preparation\",\n        \"Medication Support\"\n    ],\n    \"emergencyContact\": {\n        \"name\": \"Anna Snow\",\n        \"relationship\": \"Daughter\",\n        \"phoneNumber\": \"+353861234567\"\n    },\n    \"notes\": \"Mild dementia. Needs morning medication reminder.\",\n    \"status\": \"active\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "http://localhost:5001/api/clients",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "5001",
+                  "path": [
+                    "api",
+                    "clients"
+                  ]
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "139"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"8b-daf29zS+Sm+qE9XCS3zXl/b/hTg\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Wed, 22 Jul 2026 17:33:37 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"success\": false,\n    \"message\": \"Failed to create a new client record\",\n    \"error\": \"Client validation failed: clientCode: Client code is mandatory\"\n}"
+            },
+            {
+              "name": "400 - Age Required",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"clientCode\": \"CLT004\",\n    \"fullName\": \"John Snow\",\n    \"gender\": \"Male\",\n    \"address\": {\n        \"addressLine\": \"St Anne's Park\",\n        \"town\": \"Clontarf East Raheny\",\n        \"city\": \"Dublin\",\n        \"county\": \"Dublin\",\n        \"postCode\": \"D05 EA37\"\n    },\n    \"phoneNumber\": \"+353838119159\",\n    \"hasPets\": true,\n    \"careNeeds\": [\n        \"Personal Care\",\n        \"Meal Preparation\",\n        \"Medication Support\"\n    ],\n    \"emergencyContact\": {\n        \"name\": \"Anna Snow\",\n        \"relationship\": \"Daughter\",\n        \"phoneNumber\": \"+353861234567\"\n    },\n    \"notes\": \"Mild dementia. Needs morning medication reminder.\",\n    \"status\": \"active\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "http://localhost:5001/api/clients",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "5001",
+                  "path": [
+                    "api",
+                    "clients"
+                  ]
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "131"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"83-wQCFvUxg6n1/zaeXxPylsW6XSjg\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Wed, 22 Jul 2026 17:53:49 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"success\": false,\n    \"message\": \"Failed to create a new client record\",\n    \"error\": \"Client validation failed: age: Path `age` is required.\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Delete a Client Record",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": [
+            {
+              "name": "200 - Client Records Deleted",
+              "originalRequest": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "http://localhost:5001/api/clients/CLT004",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "5001",
+                  "path": [
+                    "api",
+                    "clients",
+                    "CLT004"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "57"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"39-pSl5gsoW6GnTRYQTmnlxervnbwU\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Wed, 22 Jul 2026 17:36:58 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"success\": true,\n    \"message\": \"Client deleted successfully.\"\n}"
+            },
+            {
+              "name": "404 - Client not Found",
+              "originalRequest": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "http://localhost:5001/api/clients/CLT005",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "5001",
+                  "path": [
+                    "api",
+                    "clients",
+                    "CLT005"
+                  ]
+                }
+              },
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "47"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"2f-hEJbr0lXPXPyZU0fDh6hna8AdQU\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Wed, 22 Jul 2026 17:37:59 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"success\": false,\n    \"message\": \"Client not found.\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Caregiver",
+      "item": [
+        {
+          "name": "Get All Employees",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{json_web_token_060h}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5001/api/caregivers",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5001",
+              "path": [
+                "api",
+                "caregivers"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "200 - get all caregivers",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "http://localhost:5001/api/caregivers",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "5001",
+                  "path": [
+                    "api",
+                    "caregivers"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "2365"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"93d-AiQG1foGYtQjIwmnIIU7NiKDxs8\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Sun, 19 Jul 2026 16:24:24 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"success\": true,\n    \"data\": [\n        {\n            \"_id\": \"6a41d0c03b1ec85f79aef5bc\",\n            \"employeeCode\": \"EMP003\",\n            \"fullName\": \"Sarah Connor\",\n            \"gender\": \"Female\",\n            \"age\": 34,\n            \"locationCode\": \"D04X2\",\n            \"phoneNumber\": \"+353871234567\",\n            \"hasPetAllergy\": false,\n            \"skills\": [\n                \"Dementia Care\",\n                \"Meal Preparation\",\n                \"Mobility Support\"\n            ],\n            \"availability\": [\n                {\n                    \"_id\": \"6a5cfa38f0875fd01bfb08f3\",\n                    \"day\": \"Monday\",\n                    \"startTime\": \"08:00\",\n                    \"endTime\": \"12:00\"\n                },\n                {\n                    \"_id\": \"6a5cfa38f0875fd01bfb08f4\",\n                    \"day\": \"Wednesday\",\n                    \"startTime\": \"14:00\",\n                    \"endTime\": \"18:00\"\n                },\n                {\n                    \"_id\": \"6a5cfa38f0875fd01bfb08f5\",\n                    \"day\": \"Friday\",\n                    \"startTime\": \"09:00\",\n                    \"endTime\": \"13:00\"\n                }\n            ],\n            \"status\": \"active\"\n        },\n        {\n            \"_id\": \"6a41d1323b1ec85f79aef5bd\",\n            \"employeeCode\": \"EMP004\",\n            \"fullName\": \"Michael Lee\",\n            \"gender\": \"Male\",\n            \"age\": 41,\n            \"locationCode\": \"D12AD8\",\n            \"phoneNumber\": \"+35386111223x\",\n            \"hasPetAllergy\": true,\n            \"skills\": [\n                \"Medication Support\",\n                \"Palliative Care\"\n            ],\n            \"availability\": [\n                {\n                    \"_id\": \"6a5cfa38f0875fd01bfb08f6\",\n                    \"day\": \"Tuesday\",\n                    \"startTime\": \"10:00\",\n                    \"endTime\": \"16:00\"\n                },\n                {\n                    \"_id\": \"6a5cfa38f0875fd01bfb08f7\",\n                    \"day\": \"Thursday\",\n                    \"startTime\": \"08:00\",\n                    \"endTime\": \"14:00\"\n                }\n            ],\n            \"status\": \"on-leave\"\n        },\n        {\n            \"_id\": \"6a4267233b1ec85f79aef5d6\",\n            \"employeeCode\": \"EMP005\",\n            \"fullName\": \"Carli Greenholt\",\n            \"gender\": \"Male\",\n            \"age\": 49,\n            \"locationCode\": \"D12AD0\",\n            \"phoneNumber\": \"+35386111229x\",\n            \"hasPetAllergy\": true,\n            \"skills\": [\n                \"Medication Support\",\n                \"Palliative Care\"\n            ],\n            \"availability\": [\n                {\n                    \"_id\": \"6a5cfa38f0875fd01bfb08f8\",\n                    \"day\": \"Tuesday\",\n                    \"startTime\": \"10:00\",\n                    \"endTime\": \"16:00\"\n                },\n                {\n                    \"_id\": \"6a5cfa38f0875fd01bfb08f9\",\n                    \"day\": \"Thursday\",\n                    \"startTime\": \"08:00\",\n                    \"endTime\": \"14:00\"\n                }\n            ],\n            \"status\": \"on-leave\"\n        },\n        {\n            \"_id\": \"6a5ca447705047769d25ca50\",\n            \"employeeCode\": \"EMP006\",\n            \"fullName\": \"Noaht\",\n            \"gender\": \"Male\",\n            \"age\": 49,\n            \"locationCode\": \"D12AD0\",\n            \"phoneNumber\": \"+35386111229x\",\n            \"hasPetAllergy\": true,\n            \"skills\": [\n                \"Medication Support\",\n                \"Palliative Care\"\n            ],\n            \"availability\": [\n                {\n                    \"_id\": \"6a5cfa38f0875fd01bfb08fa\",\n                    \"day\": \"Tuesday\",\n                    \"startTime\": \"10:00\",\n                    \"endTime\": \"16:00\"\n                },\n                {\n                    \"_id\": \"6a5cfa38f0875fd01bfb08fb\",\n                    \"day\": \"Thursday\",\n                    \"startTime\": \"08:00\",\n                    \"endTime\": \"14:00\"\n                }\n            ],\n            \"status\": \"on-leave\"\n        },\n        {\n            \"status\": \"active\",\n            \"_id\": \"6a3ab100a6e15778118e7b59\",\n            \"employeeCode\": \"EMP001\",\n            \"fullName\": \"John Smith\",\n            \"locationCode\": \"D01001\",\n            \"hasPetAllergy\": false,\n            \"skills\": [\n                \"mobility\",\n                \"medication\"\n            ],\n            \"availability\": []\n        },\n        {\n            \"status\": \"active\",\n            \"_id\": \"6a41b60b3b1ec85f79aef5b9\",\n            \"userId\": \"6a41b656954f9a4ad88c33f7\",\n            \"employeeCode\": \"EMP002\",\n            \"fullName\": \"Albert Terry\",\n            \"locationCode\": \"D030F2\",\n            \"hasPetAllergy\": false,\n            \"skills\": [\n                \"mobility\",\n                \"medication\"\n            ],\n            \"availability\": []\n        }\n    ]\n}"
+            },
+            {
+              "name": "401 - No Token Provided",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "http://localhost:5001/api/caregivers",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "5001",
+                  "path": [
+                    "api",
+                    "caregivers"
+                  ]
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "63"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"3f-h64EmKSl5EQhyahoAMKWOwlKyoc\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Wed, 22 Jul 2026 11:14:02 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"success\": false,\n    \"message\": \"No token provided. Access denied.\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Travel Time",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{json_web_token_060h}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"origin\": {\n        \"latitude\": 53.349805,\n        \"longitude\": -6.26031\n  },\n  \"destination\": {\n        \"latitude\": 89.42728,\n        \"longitude\": -6.24357\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:5001/api/caregivers/travel",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5001",
+              "path": [
+                "api",
+                "caregivers",
+                "travel"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "200 - Distance and Duration Calculated",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"origin\": {\n        \"latitude\": 53.349805,\n        \"longitude\": -6.26031\n  },\n  \"destination\": {\n        \"latitude\": 53.42728,\n        \"longitude\": -6.24357\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "http://localhost:5001/api/caregivers/travel",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "5001",
+                  "path": [
+                    "api",
+                    "caregivers",
+                    "travel"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "131"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"83-+4pxJcJmhiHCte5BxARNT4/7DeQ\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Wed, 22 Jul 2026 00:01:24 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"success\": true,\n    \"body\": {\n        \"durationMinutes\": 23.98,\n        \"distanceKM\": 11.46,\n        \"raw\": {\n            \"routes\": [\n                {\n                    \"distanceMeters\": 11462,\n                    \"duration\": \"1439s\"\n                }\n            ]\n        }\n    }\n}"
+            },
+            {
+              "name": "500 - Invalid Values",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"origin\": {\n        \"latitude\": 53.349805,\n        \"longitude\": -6.26031\n  },\n  \"destination\": {\n        \"latitude\": 102.42728,\n        \"longitude\": -6.24357\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "http://localhost:5001/api/caregivers/travel",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "5001",
+                  "path": [
+                    "api",
+                    "caregivers",
+                    "travel"
+                  ]
+                }
+              },
+              "status": "Internal Server Error",
+              "code": 500,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "75"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"4b-A3C3zof25Eg3a8j2+RVcp0Zcmj4\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Wed, 22 Jul 2026 17:15:17 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"success\": false,\n    \"message\": \"Latitude must be in the range [-90.0, +90.0].\"\n}"
+            },
+            {
+              "name": "500 - No Routes Returned",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"origin\": {\n        \"latitude\": 53.349805,\n        \"longitude\": -6.26031\n  },\n  \"destination\": {\n        \"latitude\": 89.42728,\n        \"longitude\": -6.24357\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "http://localhost:5001/api/caregivers/travel",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "5001",
+                  "path": [
+                    "api",
+                    "caregivers",
+                    "travel"
+                  ]
+                }
+              },
+              "status": "Internal Server Error",
+              "code": 500,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "70"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"46-tcrrJi+fD86lv2igeTI+JKtH9AA\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Wed, 22 Jul 2026 17:15:46 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"success\": false,\n    \"message\": \"No route returned from Google Routes API\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Specific Employee",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5001/api/caregivers/EMP001",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5001",
+              "path": [
+                "api",
+                "caregivers",
+                "EMP001"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "200 - get by employee code",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "http://localhost:5001/api/caregivers/EMP003",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "5001",
+                  "path": [
+                    "api",
+                    "caregivers",
+                    "EMP003"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "577"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"241-9L7VjdLYEF5TTTQTZZ5kpS8jvIA\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Sun, 19 Jul 2026 16:32:33 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"success\": true,\n    \"data\": {\n        \"_id\": \"6a41d0c03b1ec85f79aef5bc\",\n        \"employeeCode\": \"EMP003\",\n        \"fullName\": \"Sarah Connor\",\n        \"gender\": \"Female\",\n        \"age\": 34,\n        \"locationCode\": \"D04X2\",\n        \"phoneNumber\": \"+353871234567\",\n        \"hasPetAllergy\": false,\n        \"skills\": [\n            \"Dementia Care\",\n            \"Meal Preparation\",\n            \"Mobility Support\"\n        ],\n        \"availability\": [\n            {\n                \"_id\": \"6a5cfc216358be28d01b4c4b\",\n                \"day\": \"Monday\",\n                \"startTime\": \"08:00\",\n                \"endTime\": \"12:00\"\n            },\n            {\n                \"_id\": \"6a5cfc216358be28d01b4c4c\",\n                \"day\": \"Wednesday\",\n                \"startTime\": \"14:00\",\n                \"endTime\": \"18:00\"\n            },\n            {\n                \"_id\": \"6a5cfc216358be28d01b4c4d\",\n                \"day\": \"Friday\",\n                \"startTime\": \"09:00\",\n                \"endTime\": \"13:00\"\n            }\n        ],\n        \"status\": \"active\"\n    }\n}"
+            },
+            {
+              "name": "404 - employee not found",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "http://localhost:5001/api/caregivers/EMP0011",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "5001",
+                  "path": [
+                    "api",
+                    "caregivers",
+                    "EMP0011"
+                  ]
+                }
+              },
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "49"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"31-NI9cPzrn1s7NRB3/fYwjGb6mKOI\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Sun, 19 Jul 2026 16:33:57 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"success\": false,\n    \"message\": \"Caregiver not found\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Add Caregiver",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"669c2d17b73e6c7e98f15427\",\n  \"employeeCode\": \"EMP008\",\n  \"fullName\": \"Maria Santos\",\n  \"gender\": \"Female\",\n  \"age\": 32,\n  \"address\": {\n    \"addressLine\": \"12 O'Connell Street Upper\",\n    \"town\": \"Dublin 1\",\n    \"city\": \"Dublin\",\n    \"county\": \"Dublin\",\n    \"postCode\": \"D01 ABC2\",\n    \"latitude\": 53.3523,\n    \"longitude\": -6.2632\n  },\n  \"phoneNumber\": \"+353871234567\",\n  \"hasPetAllergy\": false,\n  \"skills\": [\n    \"Personal Care\",\n    \"Dementia Care\",\n    \"Palliative Care\"\n  ],\n  \"availability\": [],\n  \"status\": \"active\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:5001/api/caregivers",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5001",
+              "path": [
+                "api",
+                "caregivers"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "201 - Caregiver Created",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"userId\": \"669c2d17b73e6c7e98f15421\",\n  \"employeeCode\": \"EMP007\",\n  \"fullName\": \"Maria Santos\",\n  \"gender\": \"Female\",\n  \"age\": 32,\n  \"address\": {\n    \"addressLine\": \"12 O'Connell Street Upper\",\n    \"town\": \"Dublin 1\",\n    \"city\": \"Dublin\",\n    \"county\": \"Dublin\",\n    \"postCode\": \"D01 ABC2\",\n    \"latitude\": 53.3523,\n    \"longitude\": -6.2632\n  },\n  \"phoneNumber\": \"+353871234567\",\n  \"hasPetAllergy\": false,\n  \"skills\": [\n    \"Personal Care\",\n    \"Dementia Care\",\n    \"Palliative Care\"\n  ],\n  \"availability\": [],\n  \"status\": \"active\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "http://localhost:5001/api/caregivers",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "5001",
+                  "path": [
+                    "api",
+                    "caregivers"
+                  ]
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "573"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"23d-SPB75ydfI5Wt8IumTaL6JA7HX5c\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Sun, 19 Jul 2026 17:04:01 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"success\": true,\n    \"data\": {\n        \"userId\": \"669c2d17b73e6c7e98f15421\",\n        \"employeeCode\": \"EMP007\",\n        \"fullName\": \"Maria Santos\",\n        \"gender\": \"Female\",\n        \"age\": 32,\n        \"address\": {\n            \"addressLine\": \"12 O'Connell Street Upper\",\n            \"town\": \"Dublin 1\",\n            \"city\": \"Dublin\",\n            \"county\": \"Dublin\",\n            \"postCode\": \"D01 ABC2\",\n            \"latitude\": 53.3523,\n            \"longitude\": -6.2632\n        },\n        \"phoneNumber\": \"+353871234567\",\n        \"hasPetAllergy\": false,\n        \"skills\": [\n            \"Personal Care\",\n            \"Dementia Care\",\n            \"Palliative Care\"\n        ],\n        \"availability\": [],\n        \"status\": \"active\",\n        \"_id\": \"6a5d0381b731b778f340cf61\",\n        \"createdAt\": \"2026-07-19T17:04:01.019Z\",\n        \"updatedAt\": \"2026-07-19T17:04:01.019Z\",\n        \"__v\": 0\n    }\n}"
+            },
+            {
+              "name": "400 - Duplicate key",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"userId\": \"669c2d17b73e6c7e98f15421\",\n  \"employeeCode\": \"EMP007\",\n  \"fullName\": \"Maria Santos\",\n  \"gender\": \"Female\",\n  \"age\": 32,\n  \"address\": {\n    \"addressLine\": \"12 O'Connell Street Upper\",\n    \"town\": \"Dublin 1\",\n    \"city\": \"Dublin\",\n    \"county\": \"Dublin\",\n    \"postCode\": \"D01 ABC2\",\n    \"latitude\": 53.3523,\n    \"longitude\": -6.2632\n  },\n  \"phoneNumber\": \"+353871234567\",\n  \"hasPetAllergy\": false,\n  \"skills\": [\n    \"Personal Care\",\n    \"Dementia Care\",\n    \"Palliative Care\"\n  ],\n  \"availability\": [],\n  \"status\": \"active\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "http://localhost:5001/api/caregivers",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "5001",
+                  "path": [
+                    "api",
+                    "caregivers"
+                  ]
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "148"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"94-S4+D37R+fgmymRGLCJvDyz+qTLY\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Sun, 19 Jul 2026 17:05:33 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"success\": false,\n    \"message\": \"E11000 duplicate key error collection: homecare.caregivers index: employeeCode_1 dup key: { employeeCode: \\\"EMP007\\\" }\"\n}"
+            },
+            {
+              "name": "400 - Schema Validation Failed",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"userId\": \"669c2d17b73e6c7e98f15427\",\n  \"employeeCode\": \"EMP008\",\n  \"fullName\": \"Maria Santos\",\n  \"gender\": \"Female\",\n  \"age\": 32,\n  \"phoneNumber\": \"+353871234567\",\n  \"hasPetAllergy\": false,\n  \"skills\": [\n    \"Personal Care\",\n    \"Dementia Care\",\n    \"Palliative Care\"\n  ],\n  \"availability\": [],\n  \"status\": \"active\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "http://localhost:5001/api/caregivers",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "5001",
+                  "path": [
+                    "api",
+                    "caregivers"
+                  ]
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "337"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"151-UAPo1Imee+MfHa9B1jePfqVYlPU\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Sun, 19 Jul 2026 17:06:15 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"success\": false,\n    \"message\": \"Caregiver validation failed: address.longitude: Path `address.longitude` is required., address.latitude: Path `address.latitude` is required., address.postCode: Path `address.postCode` is required., address.city: Path `address.city` is required., address.addressLine: Path `address.addressLine` is required.\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Update Caregiver",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"resigned\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:5001/api/caregivers/EMP011",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5001",
+              "path": [
+                "api",
+                "caregivers",
+                "EMP011"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "200 - Change succesful",
+              "originalRequest": {
+                "method": "PUT",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"status\": \"resigned\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "http://localhost:5001/api/caregivers/EMP007",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "5001",
+                  "path": [
+                    "api",
+                    "caregivers",
+                    "EMP007"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "575"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"23f-j42+hOTglxbBcZNKrvg3hLwslK0\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Sun, 19 Jul 2026 17:14:32 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"success\": true,\n    \"data\": {\n        \"address\": {\n            \"addressLine\": \"12 O'Connell Street Upper\",\n            \"town\": \"Dublin 1\",\n            \"city\": \"Dublin\",\n            \"county\": \"Dublin\",\n            \"postCode\": \"D01 ABC2\",\n            \"latitude\": 53.3523,\n            \"longitude\": -6.2632\n        },\n        \"_id\": \"6a5d0381b731b778f340cf61\",\n        \"userId\": \"669c2d17b73e6c7e98f15421\",\n        \"employeeCode\": \"EMP007\",\n        \"fullName\": \"Maria Santos\",\n        \"gender\": \"Female\",\n        \"age\": 32,\n        \"phoneNumber\": \"+353871234567\",\n        \"hasPetAllergy\": false,\n        \"skills\": [\n            \"Personal Care\",\n            \"Dementia Care\",\n            \"Palliative Care\"\n        ],\n        \"availability\": [],\n        \"status\": \"resigned\",\n        \"createdAt\": \"2026-07-19T17:04:01.019Z\",\n        \"updatedAt\": \"2026-07-19T17:14:32.363Z\",\n        \"__v\": 0\n    }\n}"
+            },
+            {
+              "name": "404 - Caregiver not found",
+              "originalRequest": {
+                "method": "PUT",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"status\": \"resigned\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "http://localhost:5001/api/caregivers/EMP011",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "5001",
+                  "path": [
+                    "api",
+                    "caregivers",
+                    "EMP011"
+                  ]
+                }
+              },
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "49"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"31-NI9cPzrn1s7NRB3/fYwjGb6mKOI\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Sun, 19 Jul 2026 17:18:26 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"success\": false,\n    \"message\": \"Caregiver not found\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Delete Caregiver",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"resigned\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:5001/api/caregivers/",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5001",
+              "path": [
+                "api",
+                "caregivers",
+                ""
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "404 - Caregiver not found",
+              "originalRequest": {
+                "method": "DELETE",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"status\": \"resigned\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "http://localhost:5001/api/caregivers/EMP007",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "5001",
+                  "path": [
+                    "api",
+                    "caregivers",
+                    "EMP007"
+                  ]
+                }
+              },
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": "",
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "49"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"31-NI9cPzrn1s7NRB3/fYwjGb6mKOI\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Sun, 19 Jul 2026 17:24:32 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [
+                {
+                  "expires": "Invalid Date",
+                  "domain": "",
+                  "path": ""
+                }
+              ],
+              "body": "{\n    \"success\": false,\n    \"message\": \"Caregiver not found\"\n}"
+            },
+            {
+              "name": "200 - Deletion successful",
+              "originalRequest": {
+                "method": "DELETE",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"status\": \"resigned\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "http://localhost:5001/api/caregivers/EMP008",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "5001",
+                  "path": [
+                    "api",
+                    "caregivers",
+                    "EMP008"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "83"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"53-b+Wmx9d3m2NUAPb2KVHWQKc1B7E\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Sun, 19 Jul 2026 17:25:15 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"success\": true,\n    \"employeeCode\": \"EMP008\",\n    \"message\": \"Caregiver deleted successfully\"\n}"
+            },
+            {
+              "name": "404 - Employee code not provided",
+              "originalRequest": {
+                "method": "DELETE",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"status\": \"resigned\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "http://localhost:5001/api/caregivers/",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "5001",
+                  "path": [
+                    "api",
+                    "caregivers",
+                    ""
+                  ]
+                }
+              },
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": "",
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*"
+                },
+                {
+                  "key": "Content-Security-Policy",
+                  "value": "default-src 'none'"
+                },
+                {
+                  "key": "X-Content-Type-Options",
+                  "value": "nosniff"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "text/html; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "157"
+                },
+                {
+                  "key": "Date",
+                  "value": "Sun, 19 Jul 2026 17:30:54 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [
+                {
+                  "expires": "Invalid Date",
+                  "domain": "",
+                  "path": ""
+                }
+              ],
+              "body": "<!DOCTYPE html>\n<html lang=\"en\">\n    <head>\n        <meta charset=\"utf-8\">\n        <title>Error</title>\n    </head>\n    <body>\n        <pre>Cannot DELETE /api/caregivers/</pre>\n    </body>\n</html>"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "HealthCheck",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5001/",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5001",
+              "path": [
+                ""
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "auth/login-Caregiver",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"fullName\": \"Albert Terry\",\r\n  \"employeeCode\": \"EMP002\",\r\n  \"role\": \"caregiver\"\r\n} ",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:5001/api/auth/login",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5001",
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "auth/login-Admin",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"fullName\": \"Sarah O'Connor\",\r\n  \"employeeCode\": \"ADM-001\",\r\n  \"role\": \"admin\"\r\n} ",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:5001/api/auth/login",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5001",
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "200 - Admin Login Successful",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"fullName\": \"Sarah O'Connor\",\r\n  \"employeeCode\": \"ADM-001\",\r\n  \"role\": \"admin\"\r\n} ",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "http://localhost:5001/api/auth/login",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "5001",
+                  "path": [
+                    "api",
+                    "auth",
+                    "login"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "263"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"107-+lrSwr1DOFIgZOfn3RwMhPNiDAY\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Mon, 20 Jul 2026 16:30:37 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"success\": true,\n    \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjZhNWU0YTM5ZWIxNjNlZmYyY2QzNWViOCIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc4NDU2NTAzNywiZXhwIjoxNzg1MTY5ODM3fQ.CS6C0bxf_lJf-sc1WNIfyFUthh5ZLWAPMzRXhgl-tPk\",\n    \"role\": \"admin\",\n    \"message\": \"Login successful.\"\n}"
+            },
+            {
+              "name": "401 - Invalid Employee Code",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"fullName\": \"Sarah Connor\",\r\n  \"employeeCode\": \"ADM-001\",\r\n  \"role\": \"admin\"\r\n} ",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "http://localhost:5001/api/auth/login",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "5001",
+                  "path": [
+                    "api",
+                    "auth",
+                    "login"
+                  ]
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "60"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"3c-+z5hr+Q/Ha8JFYRHO6wAMVtmSsA\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Mon, 20 Jul 2026 19:20:21 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"success\": false,\n    \"message\": \"Invalid name or employee code.\"\n}"
+            },
+            {
+              "name": "401 - Invalid Name",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"fullName\": \"Sarah O'Connor\",\r\n  \"employeeCode\": \"ADM-001\",\r\n  \"role\": \"admin\"\r\n} ",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "http://localhost:5001/api/auth/login",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "5001",
+                  "path": [
+                    "api",
+                    "auth",
+                    "login"
+                  ]
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "60"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"3c-+z5hr+Q/Ha8JFYRHO6wAMVtmSsA\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Mon, 20 Jul 2026 19:21:29 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"success\": false,\n    \"message\": \"Invalid name or employee code.\"\n}"
+            },
+            {
+              "name": "401 - No Registered Account",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"fullName\": \"Sarah O'Connor\",\r\n  \"employeeCode\": \"ADM-001\",\r\n  \"role\": \"admin\"\r\n} ",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "http://localhost:5001/api/auth/login",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "5001",
+                  "path": [
+                    "api",
+                    "auth",
+                    "login"
+                  ]
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "81"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"51-V6ezwlkenlz6YVysi3REj38XCJ8\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Mon, 20 Jul 2026 19:22:48 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"success\": false,\n    \"message\": \"No registered account found. Please register first.\"\n}"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "json_web_token_060h",
+      "value": ""
+    },
+    {
+      "key": "auth_secret_0yu8",
+      "secret": true
+    },
+    {
+      "key": "json_web_token_0cqw",
+      "value": ""
+    },
+    {
+      "key": "supabase_service_role_api_key_0cqw",
+      "value": ""
+    }
+  ]
+}
