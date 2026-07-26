@@ -1,24 +1,44 @@
 const mongoose = require("mongoose"); //import Mongoose, connects JavaScript to MongoDB
 //-------------Sub-schema: emergency contact-------
 const emergencyContactSchema = new mongoose.Schema({
-    name: { type: String, required: true, trim: true,},
+    name: { type: String, required: true, trim: true, },
 
-    relationship: { type: String, required: true, trim: true,},
-    
+    relationship: { type: String, required: true, trim: true, },
+
     phoneNumber: {
         type: String,
         required: true,
         trim: true,
         validate: {
-            validator: function(v) {
-            return /^\+?[0-9]{7,15}$/.test(v);
+            validator: function (v) {
+                return /^\+?[0-9]{7,15}$/.test(v);
             },
-        message: "Invalid phone number",
+            message: "Invalid phone number",
         },
     },
 },
-{ _id: false }); //sub docs don't need their own id
+    { _id: false }); //sub docs don't need their own id
 
+const deceasedDetailsSchema = new mongoose.Schema({
+    dateOfDeath: { type: Date, required: true },
+    causeOfDeath: { type: String, required: true, trim: true },
+    timeOfDeath: { type: String, trim: true, required: true, default: "Unknown" }
+},
+    { _id: false }); //sub docs don't need their own id
+
+const statusDetailsSchema = new mongoose.Schema({
+        inactiveReason: {
+        type: String,
+        enum: ["hospitalised", "temporary-service-paused", 'termination-of-service', "family-request", "other", "None"],
+        default: "None"
+    },
+    statusNotes: {
+        type: String,
+        default: "None"
+    },
+    deceasedDetails: deceasedDetailsSchema
+},
+    { _id: false }); //sub docs don't need their own id
 
 //--------------main Schema: the full client record---------------
 const ClientSchema = new mongoose.Schema({
@@ -28,19 +48,16 @@ const ClientSchema = new mongoose.Schema({
         unique: true, //verification2: unique client code
         trim: true, //auto removes spaces
     },
-
     fullName: {
         type: String,
         required: [true, "Full name is mandatory"],
         trim: true,
     },
-
     gender: {
         type: String,
         enum: ["Female", "Male", "Other"],
         required: true,
     },
-
     age: {
         type: Number,
         required: true,
@@ -48,7 +65,6 @@ const ClientSchema = new mongoose.Schema({
         max: [120, "Age cannot exceed 120"],
         //Mongoose validates before saving, no need to check manually in routes
     },
-
     address: {
         addressLine: { type: String, required: true },
         town: { type: String },
@@ -58,40 +74,36 @@ const ClientSchema = new mongoose.Schema({
         latitude: { type: Number, required: true },
         longitude: { type: Number, required: true },
     },
-
     phoneNumber: {
         type: String,
         required: true,
         trim: true,
         validate: {
-            validator: function(v) {
+            validator: function (v) {
                 return /^\+?[0-9]{7,15}$/.test(v);
             },
             message: "Invalid phone number",
         },
     },
-
     hasPets: {
         type: Boolean,
         default: false,
     }, //for matching with caregiver pet allergy
-
     careNeeds: [String], //array of strings, one client can have multiple care needs
     emergencyContact: emergencyContactSchema,
-    //care notes
     notes: {
         type: String,
         trim: true,
         default: "",
     },
-
     status: {
         type: String,
-        enum: ["active", "inactive"],
+        enum: ["active", "inactive", "deceased", "other"],
         default: "active",
     },
+    statusDetails: statusDetailsSchema,
     },
-  { timestamps: true }, //create and modify time automatically, createdAt & updatedAt
+    { timestamps: true }, //create and modify time automatically, createdAt & updatedAt
 );
 
 
