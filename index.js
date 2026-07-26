@@ -18,6 +18,17 @@ const app = express();
 //Middleware
 app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+app.use((err, req, res, next) => {
+  if (err instanceof SyntaxError && err.status === 400 && "body" in err) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid JSON in request body. Make sure the payload is valid JSON with double-quoted property names."
+    });
+  }
+  next(err);
+});
 
 // Request logger (logs incoming requests and response status/duration)
 const requestLogger = require("./middleware/logger");

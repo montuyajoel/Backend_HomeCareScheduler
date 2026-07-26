@@ -112,7 +112,7 @@ const updateClientAddress = async (req, res) => {
         const updated = await Client.findOneAndUpdate(
             { clientCode: req.params.clientId },
             { ...otherFields, address: addressUpdate },
-            { new: true, runValidators: true }
+            { returnDocument: "after", runValidators: true }
         );
         res.status(200).json({ success: true, message: "Client's address updated successfully.", data: updated });
     } catch (error) {
@@ -129,14 +129,78 @@ const updateClientStatus = async (req, res) => {
             return res.status(404).json({ success: false, message: "Client not found." });
         }
         if (status) {
-            const updated = await Client.findOneAndUpdate(
-                { clientCode: req.params.clientId },
-                { status: status },
-                { new: true, runValidators: true }
-            );
-            return res.status(200).json({ success: true, data: updated });
-        } else {
-            return res.status(400).json({ success: false, message: "No status value was provided in the request body." });
+            // if status is 'inactive' or 'other', require inactiveReason and statusNotes
+            if (status === 'inactive' || status === 'other') {
+                const { inactiveReason, statusNotes } = req.body;
+                //require statusNotes for non-active clients
+                if (!statusNotes || !inactiveReason) {
+                    return res.status(400).json({ success: false, message: "Status notes and inactive reason are required for non-active clients." });
+                }
+                // Update the client with inactive details
+                const updated = await Client.findOneAndUpdate(
+                    { clientCode: req.params.clientId },
+                    {
+                        status: status,
+                        statusDetails: {
+                            inactiveReason: inactiveReason,
+                            statusNotes: statusNotes
+                        }
+                    },
+                    { returnDocument: "after", runValidators: true }
+                );
+
+            }
+            // if status is 'deceased', require dateOfDeath and causeOfDeath
+            else if (status === 'deceased') {
+                const { dateOfDeath, causeOfDeath, timeOfDeath } = req.body;
+                //require dateOfDeath and causeOfDeath for deceased clients
+                if (!dateOfDeath || !causeOfDeath || !timeOfDeath) {
+                    return res.status(400).json({ success: false, message: "Date of death, time of death, and cause of death are required for deceased clients." });
+                }
+                    // Update the client with deceased details
+                    const updated = await Client.findOneAndUpdate(
+                        { clientCode: req.params.clientId },
+                        {
+                            status: status,
+                            statusDetails: {
+                                deceasedDetails:{
+                                dateOfDeath: dateOfDeath,
+                                causeOfDeath: causeOfDeath || "Unknown",
+                                timeOfDeath: timeOfDeath
+                                }
+                            }
+                        },
+                        { returnDocument: "after", runValidators: true }
+                    );
+                } 
+             else if (status === 'active') {
+                //if status is 'active', remove statusDetails entirely
+                const updated = await Client.findOneAndUpdate(
+                    { clientCode: req.params.clientId },
+                    {
+                        $unset: { statusDetails: "" }, //remove statusDetails field for active clients
+                        status: status
+                    },
+                    { returnDocument: "after", runValidators: true }
+                );
+            }
+            else {
+                return res.status(400).json({ success: false, message: "Invalid status value provided." });
+            }
+            
+            // Check if changes were made to the client record
+            const updated = await Client.findOne({ clientCode: req.params.clientId });
+            return res.status(200).json({ 
+                    success: true, data: {
+                        clientCode: updated.clientCode,
+                        fullName: updated.fullName,
+                        status: updated.status,
+                        statusDetails: updated.statusDetails
+                    } 
+                });
+        }
+        else {
+            return res.status(400).json({ success: false, message: "No status value was provided." });
         }
     } catch (error) {
         res.status(400).json({ success: false, message: "Failed to update client's status.", error: error.message });

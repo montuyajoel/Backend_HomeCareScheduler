@@ -68,7 +68,7 @@ const updateCaregiver = async (req, res) => {
         const updatedCaregiver = await Caregiver.findOneAndUpdate(
             { employeeCode: caregiverId },
             updateData,
-            { new: true, runValidators: true } // Return the updated document
+            { returnDocument: "after", runValidators: true } // Return the updated document
         );
 
         if (!updatedCaregiver) {

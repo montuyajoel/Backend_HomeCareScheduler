@@ -91,7 +91,7 @@ const sendRegisterCode = async (req, res) => {
                 emailVerificationCode: code,
                 emailVerificationExpiry: expiry,
             },
-            { upsert: true, new: true }
+            { upsert: true, returnDocument: "after" }
         );
         //------------send verification code by email-------
         await sendEmail({
