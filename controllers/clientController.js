@@ -132,13 +132,12 @@ const updateClientStatus = async (req, res) => {
         existingClient = await Client.findOne({ clientCode: req.params.clientId });
 
         existingClient = util.filterClients(req.user.role, [existingClient]); //filter based on user role
-        console.log(`Updating client status for clientId: ${req.params.clientId}, role: ${req.user.role}, existingClient: ${JSON.stringify(existingClient)}`);
+
         if (!existingClient || existingClient.length === 0) {
             return res.status(404).json({ success: false, message: "Client not found." });
         }
         existingClient = existingClient[0]; //get the first element of the filtered array
 
-        console.log(`Existing client status: ${existingClient}, New status: ${status}`);
         if (status) {
             if (status === existingClient.status) {
                 return res.status(400).json({ success: false, message: "The provided status is the same as the current status. No changes made." });
@@ -218,7 +217,6 @@ const updateClientStatus = async (req, res) => {
             return res.status(400).json({ success: false, message: "No status value was provided." });
         }
     } catch (error) {
-        console.error("Error updating client status:", error);
         res.status(400).json({ success: false, message: "Failed to update client's status.", error: error.message });
     }
 }
