@@ -1,5 +1,6 @@
 const geocodeStructuredAddress = require("../utils/geocodeStructuredAddress.js");
 const Client = require("../models/Client");
+const util= require("../utils/clientFilter.js");
 //!!!FOR createclient and UpdateClient , only for the address part, not completed!!!!
 
 //--------GET all clients---------------
@@ -7,10 +8,12 @@ const Client = require("../models/Client");
 const getAllClients = async (req, res) => {
     try {
         const clients = await Client.find().sort({ createdAt: -1 });//descending order
-        if (clients.length > 0) (
+        console.log(`Fetching client details for clientId: ${JSON.stringify(req.user)}`);
+        const filteredClients = util.filterClients(req.user.role, clients);
+        if (filteredClients.length > 0) (
             res.status(200).json({
                 success: true,
-                body: clients
+                body: filteredClients
             })
         )
         else (
@@ -32,13 +35,13 @@ const getAllClients = async (req, res) => {
 const getSpecificClient = async (req, res) => {
     try {
         clientId = req.params.clientId
-        const qclient = await Client.findOne({ clientCode: clientId });
-        if (qclient) (
-            res.status(200).json({ success: true, body: qclient })
-        )
-        else (
-            res.status(404).json({ success: false, message: `Client ${clientId} not found.'` })
-        )
+        const specific_client = await Client.findOne({ clientCode: clientId });
+        filteredClients = util.filterClients(req.user.role, [specific_client]);
+        if (filteredClients.length > 0) {
+            res.status(200).json({ success: true, body: filteredClients[0] });
+        } else {
+            res.status(404).json({ success: false, message: `Client ${clientId} not found.` });
+        }
     } catch (error) {
         res.status(500).json({
             success: false,
