@@ -15,7 +15,7 @@ const {
 
 //route only define endpoint+middleware, only logged in admin users can get all clients
 router.get("/", protect, adminOnly, getAllClients);
-router.get("/:clientId", protect, adminOnly, getSpecificClient);
+router.get("/:clientId", protect, getSpecificClient);
 router.post("/", protect, adminOnly, createClient);
 router.put("/address/:clientId", protect, adminOnly, updateClientAddress);
 router.put("/status/:clientId", protect, adminOnly, updateClientStatus);
