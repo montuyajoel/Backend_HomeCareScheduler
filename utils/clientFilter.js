@@ -1,10 +1,9 @@
 const filterClients = (role, clientList) => {
-    filter={
+    const filter = {
         'caregiver': ['active'],
         'admin': ['active', 'inactive']
     }
     return clientList.filter(client => filter[role]?.includes(client.status));
 }
 
-module.exports = { filterClients
- };
+module.exports = { filterClients };
