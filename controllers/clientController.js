@@ -8,7 +8,7 @@ const util= require("../utils/clientFilter.js");
 const getAllClients = async (req, res) => {
     try {
         const clients = await Client.find().sort({ createdAt: -1 });//descending order
-        //filter clients based on user role
+
         const filteredClients = util.filterClients(req.user.role, clients);
         if (filteredClients.length > 0) (
             res.status(200).json({
@@ -139,10 +139,6 @@ const updateClientStatus = async (req, res) => {
         existingClient = existingClient[0]; //get the first element of the filtered array
 
         if (status) {
-            if (status === existingClient.status) {
-                return res.status(400).json({ success: false, message: "The provided status is the same as the current status. No changes made." });
-            }
-
             // if status is 'inactive' or 'other', require inactiveReason and statusNotes
             if (status === 'inactive' || status === 'other') {
                 const { inactiveReason, statusNotes } = req.body;
