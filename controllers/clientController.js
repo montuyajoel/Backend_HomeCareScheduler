@@ -8,7 +8,7 @@ const util= require("../utils/clientFilter.js");
 const getAllClients = async (req, res) => {
     try {
         const clients = await Client.find().sort({ createdAt: -1 });//descending order
-        console.log(`Fetching client details for clientId: ${JSON.stringify(req.user)}`);
+
         const filteredClients = util.filterClients(req.user.role, clients);
         if (filteredClients.length > 0) (
             res.status(200).json({
@@ -36,6 +36,7 @@ const getSpecificClient = async (req, res) => {
     try {
         clientId = req.params.clientId
         const specific_client = await Client.findOne({ clientCode: clientId });
+        //filter clients based on user role
         filteredClients = util.filterClients(req.user.role, [specific_client]);
         if (filteredClients.length > 0) {
             res.status(200).json({ success: true, body: filteredClients[0] });
@@ -90,13 +91,14 @@ const updateClientAddress = async (req, res) => {
         const { addressLine, town, city, county, postCode, ...otherFields } = req.body;
 
         //Find the existing client
-        const existingClient = await Client.findOne({ clientCode: req.params.clientId });
+        existingClient = await Client.findOne({ clientCode: req.params.clientId });
 
+        existingClient = util.filterClients(req.user.role, [existingClient]); //filter based on user role
         //If client not found, return error
-        if (!existingClient) {
+        if (!existingClient || existingClient.length === 0) {
             return res.status(404).json({ success: false, message: "Client not found." });
         }
-
+        existingClient = existingClient[0]; //get the first element of the filtered array
         //Initialize address update with existing address
         let addressUpdate = existingClient.address;
 
@@ -127,10 +129,15 @@ const updateClientAddress = async (req, res) => {
 const updateClientStatus = async (req, res) => {
     try {
         const { status } = req.body;
-        const existingClient = await Client.findOne({ clientCode: req.params.clientId });
-        if (!existingClient) {
+        existingClient = await Client.findOne({ clientCode: req.params.clientId });
+
+        existingClient = util.filterClients(req.user.role, [existingClient]); //filter based on user role
+
+        if (!existingClient || existingClient.length === 0) {
             return res.status(404).json({ success: false, message: "Client not found." });
         }
+        existingClient = existingClient[0]; //get the first element of the filtered array
+
         if (status) {
             // if status is 'inactive' or 'other', require inactiveReason and statusNotes
             if (status === 'inactive' || status === 'other') {
