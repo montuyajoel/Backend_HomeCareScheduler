@@ -1,6 +1,7 @@
 const geocodeStructuredAddress = require("../utils/geocodeStructuredAddress.js");
 const Client = require("../models/Client");
 const util= require("../utils/clientFilter.js");
+const Auditor = require("../utils/auditHelper.js");
 //!!!FOR createclient and UpdateClient , only for the address part, not completed!!!!
 
 //--------GET all clients---------------
@@ -8,7 +9,7 @@ const util= require("../utils/clientFilter.js");
 const getAllClients = async (req, res) => {
     try {
         const clients = await Client.find().sort({ createdAt: -1 });//descending order
-
+        //filter clients based on user role
         const filteredClients = util.filterClients(req.user.role, clients);
         if (filteredClients.length > 0) (
             res.status(200).json({
@@ -64,6 +65,7 @@ const createClient = async (req, res) => {
             county: address.county,
             postCode: address.postCode
         });
+        otherFields.birthDate = new Date(otherFields.birthDate);// Convert birthDate to Date object
 
         const newClient = new Client({
             ...otherFields,
@@ -113,13 +115,35 @@ const updateClientAddress = async (req, res) => {
             const { latitude, longitude } = await geocodeStructuredAddress({ addressLine, town, city, county, postCode });
             addressUpdate = { addressLine, town, city, county, postCode, latitude, longitude };
         }
+        else {
+            return res.status(400).json({ success: false, message: "No changes detected in the address fields." });
+        }
         //Update client with the new address
         const updated = await Client.findOneAndUpdate(
             { clientCode: req.params.clientId },
             { ...otherFields, address: addressUpdate },
             { returnDocument: "after", runValidators: true }
         );
-        res.status(200).json({ success: true, message: "Client's address updated successfully.", data: updated });
+
+        //Log the address update action
+        Auditor.auditLogger(req.user.id, 
+            'change_address', 
+            req.params.clientId,
+            existingClient.address, 
+            updated.address);
+
+        res.status(200).json({ 
+            success: true, 
+            message: "Client's address updated successfully.", 
+            data: {
+                adminUser: req.user.id,
+                actionType: 'change_address',
+                client: updated.clientCode,
+                clientName: updated.fullName,
+                oldAddress: existingClient.address,
+                newAddress: updated.address
+        } 
+    });
     } catch (error) {
         res.status(400).json({ success: false, message: "Failed to update client's address.", error: error.message });
     }
@@ -139,6 +163,10 @@ const updateClientStatus = async (req, res) => {
         existingClient = existingClient[0]; //get the first element of the filtered array
 
         if (status) {
+            if (status === existingClient.status) {
+                return res.status(400).json({ success: false, message: "The provided status is the same as the current status. No changes made." });
+            }
+
             // if status is 'inactive' or 'other', require inactiveReason and statusNotes
             if (status === 'inactive' || status === 'other') {
                 const { inactiveReason, statusNotes } = req.body;
@@ -200,6 +228,23 @@ const updateClientStatus = async (req, res) => {
             
             // Check if changes were made to the client record
             const updated = await Client.findOne({ clientCode: req.params.clientId });
+           
+            // Log the status update action
+            Auditor.auditLogger(
+                req.user.id,
+                'status_update',
+                req.params.clientId,
+                {
+                    status: existingClient.status,
+                    statusDetails: existingClient.statusDetails
+                },
+                {
+                    status: updated.status,
+                    statusDetails: updated.statusDetails
+                }
+            );
+
+            // Return the updated client information
             return res.status(200).json({ 
                     success: true, data: {
                         clientCode: updated.clientCode,
@@ -210,6 +255,7 @@ const updateClientStatus = async (req, res) => {
                 });
         }
         else {
+            // If no status value is provided in the request body, return an error
             return res.status(400).json({ success: false, message: "No status value was provided." });
         }
     } catch (error) {

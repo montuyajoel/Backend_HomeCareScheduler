@@ -65,6 +65,25 @@ const ClientSchema = new mongoose.Schema({
         max: [120, "Age cannot exceed 120"],
         //Mongoose validates before saving, no need to check manually in routes
     },
+    birthDate: {
+        type: Date,
+        required: true,
+    },
+    preferredCaregiverGender: {
+        type: String,
+        enum: ["Female", "Male", "Other", "No Preference"],
+        default: "No Preference",
+    },
+    mobilityStatus: {
+        type: String,
+        enum: ["Independent", "Assisted", "Wheelchair-bound", "Bedridden", "Other"],
+        default: "Independent",
+    },
+    cognitiveStatus: {
+        type: String,
+        enum: ["Normal", "Mild Cognitive Impairment", "Dementia", "Other"],
+        default: "Normal",
+    },
     address: {
         addressLine: { type: String, required: true },
         town: { type: String },
