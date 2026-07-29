@@ -105,9 +105,32 @@ async function deleteFile(objectPath) {
   return data;
 }
 
+// Checks if the Supabase connection is working by attempting to fetch a small amount of data from the 'careplans' table.
+async function checkSupabaseConnection() {
+  try {
+    const { data, error } = await supabase.storage
+      .from(bucketName)
+      .list("", {
+        limit: 1,
+      });
+
+    if (error) {
+      console.error("Supabase storage connection failed:", error.message);
+      return false;
+    }
+
+    console.log("✅ Supabase storage connection successful");
+    return true;
+  } catch (error) {
+    console.error("Supabase connection error:", error.message);
+    return false;
+  }
+}
+
 module.exports = {
   uploadFile,
   downloadFile,
   deleteFile,
   generateHashedFilename,
+  checkSupabaseConnection
 };

@@ -10,6 +10,7 @@ const Caregiver = require("./models/Caregiver");
 const authRoutes = require("./routes/auth");
 const clientRoutes = require("./routes/clients");
 const caregiverRoutes = require("./routes/caregivers");
+const supaBase = require("./utils/filestorageHelper");
 
 const visitLogRoutes = require("./routes/visitLogs");
 
@@ -39,8 +40,11 @@ app.use("/api/visits", visitLogRoutes);
 //Connect to MongoDB (local for now, switch to Atlas later)
 mongoose
   .connect(process.env.MONGO_URI) //"mongodb://localhost:27017/homeCare"
-  .then(() => console.log("✅ Connected to MongoDB"))
+  .then(() => console.log("✅ Connected to MongoDB with path " + process.env.MONGO_URI))
   .catch((err) => console.error("❌ MongoDB connection error:", err));
+
+// Check Supabase Connection
+supaBase.checkSupabaseConnection();
 
 //Health check route
 app.get("/", (req, res) => {
