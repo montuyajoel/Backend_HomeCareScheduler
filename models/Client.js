@@ -1,4 +1,5 @@
 const mongoose = require("mongoose"); //import Mongoose, connects JavaScript to MongoDB
+
 //-------------Sub-schema: emergency contact-------
 const emergencyContactSchema = new mongoose.Schema({
     name: { type: String, required: true, trim: true, },
@@ -19,6 +20,7 @@ const emergencyContactSchema = new mongoose.Schema({
 },
     { _id: false }); //sub docs don't need their own id
 
+//-------------Sub-schema: deceased details-------
 const deceasedDetailsSchema = new mongoose.Schema({
     dateOfDeath: { type: Date, required: true },
     causeOfDeath: { type: String, required: true, trim: true },
@@ -26,6 +28,7 @@ const deceasedDetailsSchema = new mongoose.Schema({
 },
     { _id: false }); //sub docs don't need their own id
 
+//
 const statusDetailsSchema = new mongoose.Schema({
         inactiveReason: {
         type: String,
@@ -39,6 +42,16 @@ const statusDetailsSchema = new mongoose.Schema({
     deceasedDetails: deceasedDetailsSchema
 },
     { _id: false }); //sub docs don't need their own id
+
+
+const CarePlanSchema = new mongoose.Schema({
+    filePath: { type: String, required: true },
+    storedFilename: { type: String, required: true },
+    mimeType: { type: String, required: true },
+    uploadedAt: { type: Date, default: Date.now }
+},
+    { _id: false }); //sub docs don't need their own id 
+
 
 //--------------main Schema: the full client record---------------
 const ClientSchema = new mongoose.Schema({
@@ -66,8 +79,18 @@ const ClientSchema = new mongoose.Schema({
         //Mongoose validates before saving, no need to check manually in routes
     },
     birthDate: {
-        type: Date,
-        required: true,
+    type: String,
+    required: [true, "Birth date is required"],
+    validate: {
+        validator(value) {
+        return (
+            typeof value === "string" &&
+            !Number.isNaN(Date.parse(value)) &&
+            value === new Date(value).toISOString()
+        );
+        },
+        message: "Birth date must be a valid ISO 8601 date",
+    },
     },
     preferredCaregiverGender: {
         type: String,
@@ -76,7 +99,7 @@ const ClientSchema = new mongoose.Schema({
     },
     mobilityStatus: {
         type: String,
-        enum: ["Independent", "Assisted", "Wheelchair-bound", "Bedridden", "Other"],
+        enum: ["Independent", "Assisted", "Hoisted", "Wheelchair-bound", "Bedridden", "Other"],
         default: "Independent",
     },
     cognitiveStatus: {
@@ -121,6 +144,7 @@ const ClientSchema = new mongoose.Schema({
         default: "active",
     },
     statusDetails: statusDetailsSchema,
+    carePlan: CarePlanSchema, //embedded sub-document for care plan file info
     },
     { timestamps: true }, //create and modify time automatically, createdAt & updatedAt
 );
