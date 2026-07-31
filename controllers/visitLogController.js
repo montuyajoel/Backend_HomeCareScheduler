@@ -3,6 +3,8 @@ const VisitLog = require("../models/VisitLog");
 const Schedule = require("../models/Schedule");
 //add this to resolve the caregiver profile from the logged-in user
 const Caregiver = require("../models/Caregiver");
+const Client = require("../models/Client");
+const User = require("../models/User");
 
 const { getDistanceInMeters } = require("../utils/geoUtils");
 
@@ -25,7 +27,12 @@ const LOCATION_RADIUS_METERS = 200;
 
 const { ObjectId } = require('mongodb');
 const getCaregiverByUserId = async (userId) => {
-    return await Caregiver.findOne({ userId: new ObjectId(userId) });
+    const user = await User.findOne({ _id: new ObjectId(userId) });
+    if (!user) {
+        throw new Error("User not found");
+    }
+
+    return await Caregiver.findOne({ _id: new ObjectId(user.caregiverId) });
 };//helper
 
 //helper function to get the shift start date-time as a Date object
@@ -53,7 +60,6 @@ const getTodayShifts = async (req, res) => {
         const userId = req.user.id;
         const caregiver = await getCaregiverByUserId(userId);
 
-        console.log('===getTodayShifts===', caregiver, '=====', userId)
         if (!caregiver) {
             return res.status(404).json({
                 success: false, message: "Caregiver profile not found for this account",
@@ -74,7 +80,7 @@ const getTodayShifts = async (req, res) => {
             caregiver: caregiverId,
             date: { $gte: startOfDay, $lte: endOfDay },
         })
-            .populate("client", "fullName clientCode address") //never populate phone field-privacy rule
+            .populate("client", "fullName clientCode address notes  carePlan") //never populate phone field-privacy rule
             .sort({ startTime: 1 });
         //.populate("client", "fullName clientCode address") targets only that one field,
         // it looks up the Client collection using that ID
@@ -335,7 +341,6 @@ const clockIn = async (req, res) => {
 };
 
 //==========================Clock Out=========================================
-//console.log("==========Clock Out ==================");
 const clockOut = async (req, res) => {
     try {
 
