@@ -2,6 +2,7 @@ const schedule = require("../models/Schedule");
 const client= require("../models/Client");
 const caregiver = require("../models/Caregiver");
 const auditLog = require("../models/AuditLog");
+const user = require("../models/User");
 
 const { ObjectId } = require('mongodb');
 
@@ -47,9 +48,12 @@ const getMySchedules = async (req, res) => {
     try {
         const userId = req.user.id; // Assuming the authenticated user's ID is stored in req.user.id
 
-        const findCaregiver = await caregiver.findOne({userId: new ObjectId(userId)})
+        const findCaregiver = await user.findOne({_id: new ObjectId(userId)}).populate('caregiverId');
+        if(!findCaregiver){
+            return res.status(404).json({ success: false, message: "Caregiver not found for the authenticated user." });
+        }
 
-        const schedules = await schedule.find({ caregiver: findCaregiver._id })
+        const schedules = await schedule.find({ caregiver: findCaregiver.caregiverId })
             .populate('client', 'name clientCode') // Populate client details (name and clientCode)
             .sort({ date: 1, startTime: 1 }); // Sort by date and start time
 
