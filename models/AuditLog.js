@@ -4,7 +4,13 @@ const mongoose = require('mongoose');
 const AuditLogSchema = new mongoose.Schema({
     actionType: {
         type: String,
-        enum: [ 'status_update', 'change_address', 'replace_careplan', 'delete_client' ],
+        enum: [ 'status_update',
+                'change_address', 
+                'update_careplan', 
+                'delete_client', 
+                'delete_careplan', 
+                'update_emergency_contact',
+                'update_note'],
         required: true,
     },
     oldValue: {
