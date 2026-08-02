@@ -3,6 +3,8 @@ const VisitLog = require("../models/VisitLog");
 const Schedule = require("../models/Schedule");
 //add this to resolve the caregiver profile from the logged-in user
 const Caregiver = require("../models/Caregiver");
+const Client = require("../models/Client");
+const User = require("../models/User");
 
 const { getDistanceInMeters } = require("../utils/geoUtils");
 
@@ -25,7 +27,12 @@ const LOCATION_RADIUS_METERS = 200;
 
 const { ObjectId } = require('mongodb');
 const getCaregiverByUserId = async (userId) => {
-    return await Caregiver.findOne({ userId: new ObjectId(userId) });
+    const user = await User.findOne({ _id: new ObjectId(userId) });
+    if (!user) {
+        throw new Error("User not found");
+    }
+
+    return await Caregiver.findOne({ _id: new ObjectId(user.caregiverId) });
 };//helper
 
 //helper function to get the shift start date-time as a Date object
@@ -53,7 +60,6 @@ const getTodayShifts = async (req, res) => {
         const userId = req.user.id;
         const caregiver = await getCaregiverByUserId(userId);
 
-        console.log('===getTodayShifts===', caregiver, '=====', userId)
         if (!caregiver) {
             return res.status(404).json({
                 success: false, message: "Caregiver profile not found for this account",
@@ -74,7 +80,7 @@ const getTodayShifts = async (req, res) => {
             caregiver: caregiverId,
             date: { $gte: startOfDay, $lte: endOfDay },
         })
-            .populate("client", "fullName clientCode address") //never populate phone field-privacy rule
+            .populate("client", "fullName clientCode address notes  carePlan") //never populate phone field-privacy rule
             .sort({ startTime: 1 });
         //.populate("client", "fullName clientCode address") targets only that one field,
         // it looks up the Client collection using that ID
@@ -136,26 +142,117 @@ const getTodayShifts = async (req, res) => {
 };
 
 
+// Get all shifts for 14 days (today + 13 days) for the logged-in caregiver
+const getUpcoming14DayShifts = async (req, res) => {
+    try {
+        //const userId = req.user._id; //current login user Id, not the caregiver ID
+        const userId = req.user.id;
+        const caregiver = await getCaregiverByUserId(userId);
+
+        if (!caregiver) {
+            return res.status(404).json({
+                success: false,
+                message: "Caregiver profile not found for this account",
+                code: "CAREGIVER_NOT_FOUND",
+            });
+        }
+
+        const caregiverId = caregiver._id; //the actual Caregiver ID for querying Schedule
+
+        //start from today at 00:00:00
+        const startDate = new Date();
+        startDate.setHours(0, 0, 0, 0);
+
+        //include today and the following 13 days, exactly 14 calendar days
+        const endDate = new Date(startDate);
+        endDate.setDate(endDate.getDate() + 13);
+        endDate.setHours(23, 59, 59, 999);
+
+        //sorted ascending by date and start time
+        const shifts = await Schedule.find({
+            caregiver: caregiverId,
+            date: { $gte: startDate, $lte: endDate },
+        })
+            .populate("client", "fullName clientCode address notes carePlan") //never populate phone field-privacy rule
+            .sort({ date: 1, startTime: 1 });
+
+        //.populate("client", "fullName clientCode address") targets only those fields,
+        //it looks up the Client collection using that ID
+        //and replaces the reference with the actual client data
+        //(limited to fullName, clientCode, address, notes and carePlan).
+        //It does not touch startTime, endTime, caregiver, or date — those stay exactly as they were on the Schedule document.
+
+        const ShiftIds = shifts.map((s) => s._id);
+        const visitLogs = await VisitLog.find({
+            schedule: { $in: ShiftIds },
+        });
+
+        const now = new Date();
+
+        const result = shifts
+            .map((shift) => {
+                const log = visitLogs.find(
+                    (v) => v.schedule.toString() === shift._id.toString()
+                );
+
+                const shiftStart = getShiftStartDate(shift);
+
+                const earliestEnabledTime = new Date(shiftStart);
+                earliestEnabledTime.setMinutes(
+                    earliestEnabledTime.getMinutes() - CLOCK_IN_BUTTON_LEAD_MINUTES
+                );
+
+                const isClockInTimeEnabled = now >= earliestEnabledTime;
+
+                return {
+                    scheduleId: shift._id,
+                    client: shift.client,
+                    date: shift.date,
+                    startTime: shift.startTime,
+                    endTime: shift.endTime,
+                    hasClockedIn: !!log?.clockIn?.time,
+                    hasClockedOut: !!log?.clockOut?.time,
+                    status: log?.status || null, //"in-progress" or "completed" or null
+                    visitLogId: log?._id || null,
+                    isClockInTimeEnabled, //frontend uses this directly for the disabled-button hint text, so don't need to recalculate
+                    earliestEnabledTimeFormatted: earliestEnabledTime.toLocaleString("en-GB"),
+                };
+            })
+            .filter((shift) => !shift.hasClockedOut); //remove the completed(clocked-out) shifts from the list
+
+        //distinguish "no scheduled shifts" from "all scheduled shifts already completed"
+        if (result.length === 0) {
+            return res.status(200).json({
+                success: true,
+                body: [],
+                message:
+                    shifts.length === 0
+                        ? "No shifts scheduled for the next 14 days."
+                        : "All shifts completed for the next 14 days.",
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            body: result,
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message,
+        });
+    }
+};
 
 //-------------------Clock In----------------
-//console.log("==========Clock In ==================");
 const clockIn = async (req, res) => {
     try {
-        //console.log("request------>>", req);
-        //console.log("req.userId------------>>", req.user.id);
+
         const { scheduleId, clientId, latitude, longitude, note } = req.body;
         const userId = req.user.id;//currently logged-in account's user ID
 
-        console.log("req.user = ", req.user);
-        console.log("req.user?.id =", req.user?.id);
-        console.log("req.user.id =", userId.toString);
-
-        console.log("userId =", userId);
-        console.log("typeof userId =", typeof userId);
-
         const caregiver = await getCaregiverByUserId(userId);
-        console.log("caregiver found =", caregiver ? caregiver._id.toString() : null);
-        console.log("------>", caregiver)
+
         if (!caregiver) {
             return res.status(404).json({
                 success: false, message: "Caregiver profile not found for this account",
@@ -164,13 +261,6 @@ const clockIn = async (req, res) => {
         }
         const caregiverId = caregiver._id; //the actual caregiver Id used when writing the VisitLog
         const shift = await Schedule.findById(scheduleId).populate("client");
-
-        console.log("scheduleId from body =", scheduleId);
-        console.log("shift found =", shift ? shift._id.toString() : null);
-        console.log("shift.caregiver =", shift ? shift.caregiver.toString() : null);
-        console.log("caregiverId =", caregiverId.toString());
-
-        //       console.log("========================");
 
         if (!shift) {
             return res.status(404).json({
@@ -216,9 +306,6 @@ const clockIn = async (req, res) => {
         // this shift only can be clocked in once.
         //If a VIsitLog already exists with status "in- progress", block the duplicate attempt
         const existingVisit = await VisitLog.findOne({ schedule: shift._id });
-
-        console.log("existingVisit found =", existingVisit ? existingVisit._id.toString() : null);
-        console.log("existingVisit.status =", existingVisit ? existingVisit.status : null);
 
         if (existingVisit && existingVisit.status === "in-progress") {
             return res.status(400).json({
@@ -324,8 +411,6 @@ const clockIn = async (req, res) => {
         });
 
         const saved = await newVisit.save();
-        console.log('newVisitDetail------------------------>>', newVisit)
-        console.log('newVisit created successfully--------------------', saved)
         res.status(201).json({ success: true, data: saved });
 
     } catch (error) {
@@ -335,19 +420,14 @@ const clockIn = async (req, res) => {
 };
 
 //==========================Clock Out=========================================
-//console.log("==========Clock Out ==================");
 const clockOut = async (req, res) => {
     try {
 
-        // console.log('clockout-------->>', req.body)
-        //const { visitId, latitude, longitude } = req.body;
-        // console.log("req.userId------------>>", req.user.id);
         const { visitId, clientId, latitude, longitude, note } = req.body;
         const userId = req.user.id;//currently logged-in account's user ID
         const caregiver = await getCaregiverByUserId(userId);
 
         //-----------------1 Confirm caregiver profile----------------
-        console.log('caregiver info--------', caregiver)
         if (!caregiver) {
             return res.status(404).json({
                 success: false, message: "Caregiver profile not found for this account.",
@@ -356,11 +436,8 @@ const clockOut = async (req, res) => {
         }
 
         const caregiverId = caregiver._id;
-        //console.log('caregiverId-----------', caregiverId)
 
         const visit = await VisitLog.findById(visitId).populate({ path: "schedule", populate: { path: "client" }, })
-        //console.log('visitId-----------', visitId)
-        //console.log('visitLog-----------', visit)
         if (!visit) {
             return res.status(404).json({ success: false, message: "Visit not found." });
         }
@@ -470,7 +547,6 @@ const clockOut = async (req, res) => {
         visit.reviewStatus = flaggedException ? "pending-review" : "not-required";
         visit.status = "completed";
 
-        console.log('VISITdetail before save ------------------------>>', visit)
         const updated = await visit.save();
         // Send a single final response after saving the visit
         return res.status(200).json({ success: true, data: updated });
@@ -490,7 +566,7 @@ function formatDateTime(date) {
     return `${dd}/${mm}/${yyyy} ${time}`;
 }
 
-module.exports = { getTodayShifts, clockIn, clockOut };
+module.exports = { getTodayShifts, getUpcoming14DayShifts, clockIn, clockOut };
 
 //--------------Get all visits--------------------------
 /*const getAllVisits = async (req, res) => {

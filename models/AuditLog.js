@@ -10,6 +10,7 @@ const AuditLogSchema = new mongoose.Schema({
                 'delete_client', 
                 'delete_careplan', 
                 'update_emergency_contact',
+                'schedule_update',
                 'update_note'],
         required: true,
     },

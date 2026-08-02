@@ -11,7 +11,6 @@ const GEOCODE_USER_AGENT = process.env.GEOCODE_USER_AGENT || "HomeCareScheduler/
 async function geocodeStructuredAddress({ addressLine, town, city, county, postCode }) {
     const startTime = Date.now();
     const addressStr = [addressLine, town, city, county, postCode].filter(Boolean).join(", ");
-    console.log('addressStr', addressStr);
     try {
         const response = await AXIOS.get(GEOCODE_PROVIDER_URL, {
             params: {

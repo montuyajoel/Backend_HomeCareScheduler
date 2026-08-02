@@ -11,6 +11,8 @@ const authRoutes = require("./routes/auth");
 const clientRoutes = require("./routes/clients");
 const caregiverRoutes = require("./routes/caregivers");
 const supaBase = require("./utils/filestorageHelper");
+const scheduleRoutes = require("./routes/schedules");
+const leaveRequestRoutes = require("./routes/leaveRequests");
 
 const visitLogRoutes = require("./routes/visitLogs");
 
@@ -55,6 +57,8 @@ app.get("/", (req, res) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/caregivers", caregiverRoutes);
 app.use("/api/clients", clientRoutes);
+app.use("/api/schedules", scheduleRoutes);
+app.use("/api/leave-requests", leaveRequestRoutes);
 
 //------------HSE Data Import (placeholder)----------
 app.post("/api/hse-import", (req, res) => {
