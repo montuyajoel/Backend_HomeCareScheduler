@@ -19,6 +19,57 @@ Authorization: Bearer <token>
 
 The token is issued by the auth endpoints after successful login or recovery verification.
 
+Role-based access:
+
+- **Auth required** — valid JWT bearer token
+- **Admin only** — JWT with `admin` role
+
+## Endpoint index
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| GET | `/` | — | Server status page |
+| POST | `/api/hse-import` | — | HSE data import (placeholder) |
+| POST | `/api/auth/register/send-code` | — | Send registration verification code |
+| POST | `/api/auth/register/verify` | — | Complete registration |
+| POST | `/api/auth/login` | — | Log in and receive JWT |
+| POST | `/api/auth/recover/send-code` | — | Send account recovery code |
+| POST | `/api/auth/recover/verify` | — | Verify recovery code and receive JWT |
+| GET | `/api/auth/me` | Auth | Get current user |
+| GET | `/api/auth/health` | — | Backend health check |
+| GET | `/api/clients` | Admin | List all clients |
+| GET | `/api/clients/:clientId` | Auth | Get one client |
+| POST | `/api/clients` | Admin | Create a client |
+| PUT | `/api/clients/address/:clientId` | Admin | Update client address |
+| PUT | `/api/clients/status/:clientId` | Admin | Update client status |
+| DELETE | `/api/clients/:clientId` | Admin | Delete a client |
+| POST | `/api/clients/care-plan/:clientId` | Admin | Upload care plan file |
+| GET | `/api/clients/care-plan/:clientId` | Auth | Download care plan file |
+| PUT | `/api/clients/care-plan/:clientId` | Admin | Replace care plan file |
+| DELETE | `/api/clients/care-plan/:clientId` | Admin | Delete care plan file |
+| PUT | `/api/clients/emergency-contact/:clientId` | Admin | Update emergency contact |
+| PUT | `/api/clients/note/:clientId` | Admin | Update client notes |
+| POST | `/api/caregivers` | Admin | Create a caregiver |
+| GET | `/api/caregivers` | Admin | List all caregivers |
+| GET | `/api/caregivers/:caregiverId` | Auth | Get one caregiver |
+| PUT | `/api/caregivers/:caregiverId` | Admin | Update a caregiver |
+| DELETE | `/api/caregivers/:caregiverId` | Admin | Delete a caregiver |
+| POST | `/api/caregivers/travel` | Auth | Calculate travel time between coordinates |
+| POST | `/api/schedules/assign` | Admin | Assign a shift to a caregiver |
+| GET | `/api/schedules/me` | Auth | Get schedules for the logged-in caregiver |
+| GET | `/api/schedules/caregiver/:caregiverId` | Admin | Get schedules for a specific caregiver |
+| PUT | `/api/schedules/update/:scheduleId` | Admin | Update a schedule |
+| POST | `/api/leave-requests/create` | Auth | Create a leave request |
+| GET | `/api/leave-requests/get` | Admin | List leave requests (optional status filter) |
+| GET | `/api/leave-requests/get/:employeeId` | Admin | Get leave requests for an employee |
+| GET | `/api/leave-requests/me` | Auth | Get leave requests for the logged-in caregiver |
+| PUT | `/api/leave-requests/update/admin` | Admin | Approve or reject a leave request |
+| PUT | `/api/leave-requests/update/caregiver` | Auth | Approve or reject a leave request |
+| GET | `/api/visits/today-shifts` | Auth | Get today's shifts for the logged-in caregiver |
+| GET | `/api/visits/future-shifts` | Auth | Get upcoming 14-day shifts for the logged-in caregiver |
+| POST | `/api/visits/clock-in` | Auth | Clock in to a shift |
+| PUT | `/api/visits/clock-out` | Auth | Clock out of a shift |
+
 ## Common response format
 
 Success responses usually look like this:
@@ -37,6 +88,31 @@ Error responses usually look like this:
 {
   "success": false,
   "message": "..."
+}
+```
+
+---
+
+# Root endpoints
+
+## 1) Server status page
+
+GET /
+
+Returns a simple HTML status page confirming the API is online.
+
+## 2) HSE data import
+
+POST /api/hse-import
+
+Placeholder endpoint for future HSE data import.
+
+### Success response
+
+```json
+{
+  "success": true,
+  "message": "HSE import endpoint ready"
 }
 ```
 
@@ -202,7 +278,7 @@ GET /api/auth/health
 
 # Client endpoints
 
-All client routes require authentication and admin access.
+Most client routes require authentication and admin access. The exceptions are `GET /api/clients/:clientId` and `GET /api/clients/care-plan/:clientId`, which require authentication only.
 
 ## 1) Get all clients
 
@@ -351,11 +427,139 @@ DELETE /api/clients/:clientId
 }
 ```
 
+## 7) Upload care plan
+
+POST /api/clients/care-plan/:clientId
+
+Requires admin access. Accepts a multipart form upload with a single `file` field.
+
+Example:
+
+```http
+POST /api/clients/care-plan/CL001
+Content-Type: multipart/form-data
+```
+
+### Success response
+
+```json
+{
+  "success": true,
+  "message": "Care plan file uploaded successfully.",
+  "data": {
+    "clientCode": "CL001",
+    "carePlan": {
+      "filePath": "...",
+      "storedFilename": "...",
+      "mimeType": "application/pdf",
+      "uploadedAt": "2025-01-15T10:00:00.000Z"
+    }
+  }
+}
+```
+
+### Notes
+
+- Returns 400 if the client already has a care plan file. Delete the existing file before uploading a new one.
+
+## 8) Download care plan
+
+GET /api/clients/care-plan/:clientId
+
+Requires authentication.
+
+Returns the care plan file as a binary download with appropriate `Content-Disposition` and `Content-Type` headers.
+
+## 9) Replace care plan
+
+PUT /api/clients/care-plan/:clientId
+
+Requires admin access. Accepts a multipart form upload with a single `file` field. Replaces an existing care plan file.
+
+## 10) Delete care plan
+
+DELETE /api/clients/care-plan/:clientId
+
+Requires admin access. Deletes the care plan file from storage and removes the reference from the client record.
+
+### Success response
+
+```json
+{
+  "success": true,
+  "message": "Care plan file deleted successfully.",
+  "data": {
+    "clientCode": "CL001",
+    "carePlanFile": null
+  }
+}
+```
+
+## 11) Update emergency contact
+
+PUT /api/clients/emergency-contact/:clientId
+
+Requires admin access.
+
+### Request body
+
+```json
+{
+  "name": "Mary Doe",
+  "phoneNumber": "0877654321",
+  "relationship": "Daughter"
+}
+```
+
+### Success response
+
+```json
+{
+  "success": true,
+  "message": "Emergency contact updated successfully.",
+  "data": {
+    "clientCode": "CL001",
+    "emergencyContact": {
+      "name": "Mary Doe",
+      "phoneNumber": "0877654321",
+      "relationship": "Daughter"
+    }
+  }
+}
+```
+
+## 12) Update client notes
+
+PUT /api/clients/note/:clientId
+
+Requires admin access.
+
+### Request body
+
+```json
+{
+  "notes": "Prefers morning visits"
+}
+```
+
+### Success response
+
+```json
+{
+  "success": true,
+  "message": "Note updated successfully.",
+  "data": {
+    "clientCode": "CL001",
+    "notes": "Prefers morning visits"
+  }
+}
+```
+
 ---
 
 # Caregiver endpoints
 
-All caregiver routes require authentication and admin access except the profile lookup route.
+Most caregiver routes require authentication and admin access. The exceptions are `GET /api/caregivers/:caregiverId` and `POST /api/caregivers/travel`, which require authentication only.
 
 ## 1) Create a caregiver
 
@@ -446,6 +650,271 @@ POST /api/caregivers/travel
 
 ---
 
+# Schedule endpoints
+
+## 1) Assign a schedule
+
+POST /api/schedules/assign
+
+Requires admin access.
+
+### Request body
+
+```json
+{
+  "clientCode": "CL001",
+  "employeeCode": "EMP2002",
+  "date": "2025-03-15",
+  "startTime": "08:00",
+  "endTime": "16:00"
+}
+```
+
+### Success response
+
+```json
+{
+  "success": true,
+  "message": "Schedule assigned successfully.",
+  "data": {
+    "_id": "...",
+    "client": "...",
+    "caregiver": "...",
+    "date": "2025-03-15T00:00:00.000Z",
+    "startTime": "08:00",
+    "endTime": "16:00",
+    "status": "scheduled"
+  }
+}
+```
+
+### Status codes
+
+- 201: schedule created
+- 400: client or caregiver is not active
+- 404: client or caregiver not found
+
+## 2) Get my schedules
+
+GET /api/schedules/me
+
+Requires authentication. Returns schedules for the logged-in caregiver.
+
+### Success response
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "_id": "...",
+      "client": {
+        "name": "John Doe",
+        "clientCode": "CL001"
+      },
+      "date": "2025-03-15T00:00:00.000Z",
+      "startTime": "08:00",
+      "endTime": "16:00",
+      "status": "scheduled"
+    }
+  ]
+}
+```
+
+## 3) Get schedules for a caregiver
+
+GET /api/schedules/caregiver/:caregiverId
+
+Requires admin access. The `:caregiverId` parameter is the caregiver's employee code.
+
+Example:
+
+```http
+GET /api/schedules/caregiver/EMP2002
+```
+
+## 4) Update a schedule
+
+PUT /api/schedules/update/:scheduleId
+
+Requires admin access.
+
+### Request body
+
+```json
+{
+  "date": "2025-03-16",
+  "startTime": "09:00",
+  "endTime": "17:00",
+  "caregiver": "<caregiver-object-id>",
+  "status": "scheduled"
+}
+```
+
+### Allowed values
+
+- status: `scheduled`, `in-progress`, `completed`, `cancelled`
+
+### Success response
+
+```json
+{
+  "success": true,
+  "data": {
+    "_id": "...",
+    "date": "2025-03-16T00:00:00.000Z",
+    "startTime": "09:00",
+    "endTime": "17:00",
+    "status": "scheduled"
+  }
+}
+```
+
+---
+
+# Leave request endpoints
+
+## 1) Create a leave request
+
+POST /api/leave-requests/create
+
+Requires authentication.
+
+### Request body
+
+```json
+{
+  "employeeCode": "EMP2002",
+  "leaveType": "vacation",
+  "startDate": "2025-04-01",
+  "endDate": "2025-04-07",
+  "reason": "Family holiday"
+}
+```
+
+### Allowed values
+
+- leaveType: `sick`, `vacation`, `emergency`
+- status (set by server): `pending`, `approved`, `rejected`, `cancelled`
+
+### Business rules
+
+- Vacation leave must be submitted at least 2 weeks in advance.
+- Sick, emergency, and other leave types require a non-empty `reason`.
+- Overlapping leave requests for the same employee are rejected.
+
+### Success response
+
+```json
+{
+  "success": true,
+  "message": "Leave request created successfully.",
+  "data": {
+    "employeeCode": "EMP2002",
+    "leaveType": "vacation",
+    "startDate": "2025-04-01T00:00:00.000Z",
+    "endDate": "2025-04-07T00:00:00.000Z",
+    "reason": "Family holiday",
+    "status": "pending"
+  }
+}
+```
+
+## 2) Get all leave requests (admin)
+
+GET /api/leave-requests/get
+
+Requires admin access. Optionally filter by status using a query parameter.
+
+Example:
+
+```http
+GET /api/leave-requests/get?status=pending
+```
+
+### Allowed query values
+
+- status: `pending`, `approved`, `rejected`
+
+## 3) Get leave requests by employee
+
+GET /api/leave-requests/get/:employeeId
+
+Requires admin access. Returns all leave requests for the given employee code.
+
+Example:
+
+```http
+GET /api/leave-requests/get/EMP2002
+```
+
+## 4) Get my leave requests
+
+GET /api/leave-requests/me
+
+Requires authentication. Returns leave requests for the logged-in caregiver.
+
+### Success response
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "employeeCode": "EMP2002",
+      "leaveType": "vacation",
+      "startDate": "2025-04-01T00:00:00.000Z",
+      "endDate": "2025-04-07T00:00:00.000Z",
+      "reason": "Family holiday",
+      "status": "pending"
+    }
+  ]
+}
+```
+
+## 5) Update leave request status (admin)
+
+PUT /api/leave-requests/update/admin
+
+Requires admin access.
+
+### Request body
+
+```json
+{
+  "leaveRequestId": "<leave-request-object-id>",
+  "status": "approved",
+  "adminNotes": "Approved for the requested dates."
+}
+```
+
+### Allowed values
+
+- status: `approved`, `rejected`
+
+### Success response
+
+```json
+{
+  "success": true,
+  "message": "Leave request approved successfully.",
+  "data": {
+    "status": "approved",
+    "adminNotes": "Approved for the requested dates."
+  }
+}
+```
+
+## 6) Update leave request status (caregiver)
+
+PUT /api/leave-requests/update/caregiver
+
+Requires authentication.
+
+Uses the same request body and response format as the admin update endpoint.
+
+---
+
 # Visit log endpoints
 
 These endpoints support caregiver clock-in and clock-out flow.
@@ -478,7 +947,42 @@ Requires authentication.
 }
 ```
 
-## 2) Clock in
+## 2) Get upcoming 14-day shifts
+
+GET /api/visits/future-shifts
+
+Requires authentication. Returns shifts for today and the following 13 days for the logged-in caregiver. Completed (clocked-out) shifts are excluded from the response.
+
+### Success response
+
+```json
+{
+  "success": true,
+  "body": [
+    {
+      "scheduleId": "...",
+      "client": {
+        "fullName": "John Doe",
+        "clientCode": "CL001",
+        "address": { },
+        "notes": "Prefers morning visits",
+        "carePlan": { }
+      },
+      "date": "2025-03-15T00:00:00.000Z",
+      "startTime": "08:00",
+      "endTime": "16:00",
+      "hasClockedIn": false,
+      "hasClockedOut": false,
+      "status": null,
+      "visitLogId": null,
+      "isClockInTimeEnabled": false,
+      "earliestEnabledTimeFormatted": "15/03/2025, 07:40:00"
+    }
+  ]
+}
+```
+
+## 3) Clock in
 
 POST /api/visits/clock-in
 
@@ -510,7 +1014,7 @@ POST /api/visits/clock-in
 - The server checks the shift assignment, the selected client, the date, the 20-minute early clock-in window, and the 200m location rule.
 - If the caregiver clocks in late without a note, the request is rejected.
 
-## 3) Clock out
+## 4) Clock out
 
 PUT /api/visits/clock-out
 

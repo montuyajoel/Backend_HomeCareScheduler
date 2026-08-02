@@ -7,6 +7,10 @@ const leaveRequestSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  fullName: {
+    type: String,
+    default: null
+  },
   leaveType: {
     type: String,
     enum: ['sick', 'vacation', 'emergency'],

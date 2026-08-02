@@ -90,8 +90,21 @@ const getLeaveRequests = async (req, res) => {
         }else{
             query.status = { $in: ['pending', 'approved', 'rejected'] }; // Default to all statuses if not provided
         }
+        // get full name of caregiver from employeeCode
+        const leaveRequests = await LeaveRequest.find(query).populate('employeeCode').sort({ startDate: 1 });
+        const caregivers = await Caregiver.find({ employeeCode: { $in: leaveRequests.map(lr => lr.employeeCode) } });
 
-        const leaveRequests = await LeaveRequest.find(query).populate('employeeCode', 'name employeeCode');
+        leaveRequests.forEach(lr => {
+            const caregiver = caregivers.find(c => c.employeeCode === lr.employeeCode);
+            if (caregiver) {
+                lr.fullName = caregiver.fullName;
+            }
+        });
+
+        if (!leaveRequests || leaveRequests.length === 0) {
+            return res.status(404).json({ success: false, message: "No leave requests found." });
+        }
+
         // Sort leave requests by startDate in ascending order
         leaveRequests.sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
 
