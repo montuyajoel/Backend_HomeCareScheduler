@@ -1,5 +1,6 @@
 const LeaveRequest = require("../models/LeaveRequests");
 const Caregiver = require("../models/Caregiver");
+const Schedule = require("../models/Schedule");
 const User = require("../models/User");
 const {ObjectId} = require("mongodb");
 const mongoose = require("mongoose");
@@ -56,6 +57,12 @@ const createLeaveRequest = async (req, res) => {
             return res.status(400).json({ success: false, message: "Start date must be before end date." });
         }
 
+        // check if leave span applied is more than 30 days
+        const leaveSpan = (new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24); // in days
+        if (leaveSpan > 30) {
+            return res.status(400).json({ success: false, message: "Your leave request is longer than one month. Please double-check your start and end dates before submitting." });
+        }
+
         // Check for overlapping leave request
         const existingLeaveRequest = await CheckLeaveRequestOverlap(employeeCode, startDate, endDate);
 
@@ -88,7 +95,7 @@ const getLeaveRequests = async (req, res) => {
         if (status) {
             query.status = status.toLowerCase(); // Filter by status if provided
         }else{
-            query.status = { $in: ['pending', 'approved', 'rejected'] }; // Default to all statuses if not provided
+            query.status = { $in: ['pending', 'approved', 'rejected', 'cancelled'] }; // Default to all statuses if not provided
         }
         // get full name of caregiver from employeeCode
         const leaveRequests = await LeaveRequest.find(query).populate('employeeCode').sort({ startDate: 1 });
@@ -120,6 +127,7 @@ const getLeaveRequests = async (req, res) => {
     }
 }
 
+// Update leave request status by admin
 const updateLeaveRequestStatus = async (req, res) => {
     try {
         const { status, adminNotes, leaveRequestId } = req.body;
@@ -150,6 +158,7 @@ const updateLeaveRequestStatus = async (req, res) => {
         leaveRequest.status = status;
         leaveRequest.adminNotes = adminNotes || "";
         leaveRequest.reviewedAt = new Date();
+        leaveRequest.approvedBy = req.user.id; // Assuming req.user.id contains the admin's ID
 
         await leaveRequest.save();
 
@@ -169,25 +178,35 @@ const updateLeaveRequestStatus = async (req, res) => {
 }; 
 
 // Allow caregiver to update the date and status if they want to cancel their leave request as long as it is still pending
-const UpdateLeaveRequestCaregiver = async (req, res) => {
+const updateLeaveRequestCaregiver = async (req, res) => {
     try {
         //req.query should contain type cancel or change_date
         const { type } = req.query;
+        const { leaveRequestId } = req.params;
+
+        // Validate the request type
         if (!type || (type !== "cancel" && type !== "change_date")) {
             return res.status(400).json({ success: false, message: "Invalid request type. Use 'cancel' or 'change_date'." });
         }
-        const { leaveRequestId } = req.params;
+        
+        if(type === "change_date" && (!req.body.startDate || !req.body.endDate)){
+            return res.status(400).json({ success: false, message: "For changing dates, both startDate and endDate are required." });
+        }
+
+        if(type === "change_date" && new Date(req.body.startDate) > new Date(req.body.endDate)){
+            return res.status(400).json({ success: false, message: "Start date must be before end date." });
+        }
+
+        if(type === "change_date" && ((new Date(req.body.endDate) - new Date(req.body.startDate)) / (1000 * 60 * 60 * 24) > 30)){
+            return res.status(400).json({ success: false, message: "Your leave request is longer than one month. Please double-check your start and end dates before submitting." });
+        }
+
         const { caregiverCode, startDate, endDate } = req.body;
 
         const leaveRequest = await LeaveRequest.findById(new ObjectId(leaveRequestId));
 
         if (!leaveRequest) {
             return res.status(404).json({ success: false, message: "Leave request not found." });
-        }
-
-        // Check if the caregiver is the owner of the leave request
-        if (leaveRequest.employeeCode  !== caregiverCode) {
-            return res.status(403).json({ success: false, message: "You are not authorized to update this leave request." });
         }
 
         // Allow caregiver to cancel their leave request if it is still pending
@@ -208,13 +227,11 @@ const UpdateLeaveRequestCaregiver = async (req, res) => {
             // Check for overlapping leave requests
             const existingLeaveRequest = await CheckLeaveRequestOverlap(caregiverCode, startDate, endDate);
 
-            if (existingLeaveRequest) {
+            // If there's an existing leave request that overlaps and it's not the current one being updated, return an error
+            if (existingLeaveRequest && existingLeaveRequest._id.toString() !== leaveRequestId) {
                 return res.status(400).json({ success: false, message: "You already have a leave request that overlaps with the requested dates." });
             }
 
-            if (existingLeaveRequest) {
-                return res.status(400).json({ success: false, message: "You already have a leave request that overlaps with the requested dates." });
-            }
             // Allow caregiver to update the start and end dates if needed
             leaveRequest.startDate = startDate || leaveRequest.startDate;
             leaveRequest.endDate = endDate || leaveRequest.endDate;
@@ -241,6 +258,60 @@ const getLeaveRequestById = async (req, res) => {
         res.status(500).json({ success: false, message: error.message });
     }
 };
+
+// Check the affected shifts for the caregiver's leave request
+const checkAffectedShifts = async (req, res) => {
+    try {
+        const { employeeCode, startDate, endDate } = req.query; // Assuming the request body contains employeeCode, startDate, and endDate
+    
+        // Validate that startDate is before endDate
+        if (new Date(startDate) > new Date(endDate)) {
+            return res.status(400).json({ success: false, message: "Start date must be before end date." });
+        }
+
+        const caregiverId = await Caregiver.findOne({ employeeCode: employeeCode });
+        if (!caregiverId) {
+            return res.status(404).json({ success: false, message: "Caregiver not found." });
+        }
+
+        // Find shifts that overlap with the leave request dates for the caregiver
+        const leaveStartDate = new Date(startDate);
+        leaveStartDate.setUTCHours(0, 0, 0, 0);
+
+        const leaveEndDate = new Date(endDate);
+        leaveEndDate.setUTCDate(leaveEndDate.getUTCDate() + 1);
+        leaveEndDate.setUTCHours(0, 0, 0, 0);
+
+        // Find affected shifts for the caregiver within the leave request dates
+        const affectedShifts = await Schedule.find({
+            caregiver: new ObjectId(caregiverId._id),
+            date: {
+                $gte: leaveStartDate,
+                $lt: leaveEndDate,
+            },
+            status: {
+                $ne: "cancelled",
+            },
+        })
+        .populate("client", "clientCode fullName address")
+        .sort({
+            date: 1,
+            startTime: 1,
+        });
+
+        // Return the affected shifts if any, otherwise return a message indicating no affected shifts
+        if (affectedShifts && affectedShifts.length > 0) {
+            affectedShifts.sort((a, b) => new Date(a.startTime) - new Date(b.startTime));
+            res.status(200).json({ success: false, data: affectedShifts });
+        }
+        else {
+             return res.status(200).json({ success: true, message: "No affected shifts found for the caregiver's leave request." });
+        }
+
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+}
 
 
 //get my leave requests for the logged in caregiver
@@ -269,5 +340,7 @@ module.exports = {
     getLeaveRequests,
     updateLeaveRequestStatus,
     getLeaveRequestById,
-    getMyLeaveRequests
+    getMyLeaveRequests,
+    updateLeaveRequestCaregiver,
+    checkAffectedShifts
 };
