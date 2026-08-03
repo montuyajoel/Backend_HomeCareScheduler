@@ -98,7 +98,7 @@ const sendRegisterCode = async (req, res) => {
             to: email,
             subject: "HomeCare Scheduler — Email Verification Code",
             text: `Your verification code is: ${code}\n\nThis code expires in 60 seconds.\n\nDo not share this code with others.`,
-        });
+    });
         res.status(200).json({
             success: true,
             message: "Verification code sent to your email. Please enter it to complete registration.",
