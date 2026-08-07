@@ -125,7 +125,7 @@ const getTodayShifts = async (req, res) => {
 
             };
         })
-            .filter((shift) => !shift.hasClockedOut);//remove the completed(clocked-out) shifts from the list
+            // .filter((shift) => !shift.hasClockedOut);//remove the completed(clocked-out) shifts from the list
 
         //distinguish "no shifts today" from "all shifts already completed"
         if (result.length === 0) {
