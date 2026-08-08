@@ -109,7 +109,7 @@ const getLeaveRequests = async (req, res) => {
         });
 
         if (!leaveRequests || leaveRequests.length === 0) {
-            return res.status(404).json({ success: false, message: "No leave requests found." });
+            return res.status(200).json({ success: true, message: "No leave requests found." });
         }
 
         // Sort leave requests by startDate in ascending order
