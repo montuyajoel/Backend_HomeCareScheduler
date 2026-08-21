@@ -11,17 +11,15 @@ const {
     sendRecoveryCode,
     verifyRecoveryCode,
     getMe,
-    healthCheck,
 } = require ("../controllers/authController");
 
 router.post("/register/send-code", sendRegisterCode);
 router.post("/register/verify", verifyRegisterCode);
 router.post("/login", login);
 router.post("/recover/send-code", sendRecoveryCode);
-router.post("/recover/verify", verifyRecoveryCode);
+router.post("/recover/verify", verifyRecoveryCode,);
 
 router.get("/me", protect, getMe);
-router.get("/health", healthCheck);
 
 module.exports = router;
 

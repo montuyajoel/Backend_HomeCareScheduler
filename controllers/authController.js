@@ -32,8 +32,26 @@ const generateToken = (userId, role) => {
 //System verifies the record, then sends a verification code to email
 const sendRegisterCode = async (req, res) => {
     try {
+        /*const { fullName, employeeCode, email, role } = req.body;
+        const existingUser = await User.findOne({ email });
+        //check1 if this email already registered
+        if (existingUser && existingUser.isEmailVerified) {
+        return res.status(400).json({
+            success: false,
+            message: "This email is already registered.",
+        });
+        }*/
         const { fullName, employeeCode, email, role } = req.body;
 
+        //check2 if the employeeCode + fullName match a profile
+        /*let profile = null;
+        if (role === "caregiver") {
+            profile = await Caregiver.findOne({ employeeCode, fullName });
+        } else if (role === "admin") {
+            profile = await Admin.findOne({ employeeCode, fullName });
+        } else {
+            return res.status(400).json({ success: false, message: "Invalid role." });
+        }*/
         const existingUser = await User.findOne({ email });
         //check1 if this email already registered
         if (existingUser && existingUser.isEmailVerified) {
@@ -42,6 +60,13 @@ const sendRegisterCode = async (req, res) => {
                 message: "This email is already registered.",
             });
         }
+
+        /* (!profile) {
+            return res.status(400).json({
+            success: false,
+            message: "Employee code or name does not match our records.",
+            });
+        }*/
 
         //check2 if the employeeCode + fullName match a profile
         let profile = null;
@@ -53,18 +78,60 @@ const sendRegisterCode = async (req, res) => {
             return res.status(400).json({ success: false, message: "Invalid role." });
         }
 
+        /*const alreadyLinked = role === "caregiver"
+        ? await User.findOne({ caregiverId: profile._id, isEmailVerified: true })
+        : await User.findOne({ adminId: profile._id, isEmailVerified: true });*/
         if (!profile) {
             return res.status(400).json({
                 success: false,
                 message: "Employee code or name does not match our records.",
             });
         }
+    
+        /*if (alreadyLinked) {
+            return res.status(400).json({
+                success: false,
+                message: "This employee code is already registered.",
+            });
+        }*/
 
         //check3 if this employeeCode already linked to another account
         const alreadyLinked = role === "caregiver"
             ? await User.findOne({ caregiverId: profile._id, isEmailVerified: true })
             : await User.findOne({ adminId: profile._id, isEmailVerified: true });
 
+        /*//---generate verification code-----
+        const code = generateCode();
+        //current time + 5 minutes (in milliseconds)
+        const expiry = new Date(Date.now() + 5 * 60 * 1000); 
+
+        //--------save or update a pending User document-------
+        //use findOneAndUpdate with upsert:true so that if the user
+        //requests a new code, we just update the existing pending record
+        await User.findOneAndUpdate(
+            { email },
+            {
+            email,
+            role,
+            caregiverId: role === "caregiver" ? profile._id : null,
+            adminId: role === "admin" ? profile._id : null,
+            isEmailVerified: false,
+            emailVerificationCode: code,
+            emailVerificationExpiry: expiry,
+            },
+            { upsert: true, new: true }
+        );
+        //------------send verification code by email-------
+        await sendEmail({
+            to: email,
+            subject: "HomeCare Scheduler — Email Verification Code",
+            text: `Your verification code is: ${code}\n\nThis code expires in 60 seconds.\n\nDo not share this code with others.`,
+        });
+
+        res.status(200).json({
+            success: true,
+            message: "Verification code sent to your email. Please enter it to complete registration.",
+        });*/
         if (alreadyLinked) {
             return res.status(400).json({
                 success: false,
@@ -91,6 +158,7 @@ const sendRegisterCode = async (req, res) => {
                 emailVerificationCode: code,
                 emailVerificationExpiry: expiry,
             },
+            //{ upsert: true, new: true }
             { upsert: true, returnDocument: "after" }
         );
         //------------send verification code by email-------
@@ -98,7 +166,7 @@ const sendRegisterCode = async (req, res) => {
             to: email,
             subject: "HomeCare Scheduler — Email Verification Code",
             text: `Your verification code is: ${code}\n\nThis code expires in 60 seconds.\n\nDo not share this code with others.`,
-    });
+        });
         res.status(200).json({
             success: true,
             message: "Verification code sent to your email. Please enter it to complete registration.",
@@ -106,6 +174,7 @@ const sendRegisterCode = async (req, res) => {
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }
+
 };
 
 //═════════════════════════STEP 2 OF REGISTRATION═════════════════════════
@@ -116,7 +185,6 @@ const verifyRegisterCode = async (req, res) => {
         const { email, code } = req.body;
 
         const user = await User.findOne({ email, isEmailVerified: false });
-
         if (!user) {
             return res.status(400).json({
                 success: false,
@@ -155,6 +223,7 @@ const verifyRegisterCode = async (req, res) => {
 const login = async (req, res) => {
     try {
         const { fullName, employeeCode, role } = req.body;
+
         //Step 1 find the profile matching fullName + employeeCode
         let profile = null;
 
@@ -176,6 +245,7 @@ const login = async (req, res) => {
             : { adminId: profile._id, isEmailVerified: true };
 
         const user = await User.findOne(query);
+        console.log('user: ----------', user)
 
         if (!user) {
             return res.status(401).json({
@@ -185,7 +255,6 @@ const login = async (req, res) => {
         }
         //Step 3 Issue JWT token
         const token = generateToken(user._id, role);
-
         res.json({
             success: true,
             token,

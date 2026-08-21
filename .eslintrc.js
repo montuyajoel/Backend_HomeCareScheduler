@@ -7,8 +7,9 @@ module.exports = {
     'eslint:recommended'
   ],
   parserOptions: {
-    ecmaVersion: 12,
-    sourceType: 'script'
+    sourceType: 'module',
+    ecmaVersion: 12
+    //sourceType: 'script'
   },
   rules: {
     'no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],

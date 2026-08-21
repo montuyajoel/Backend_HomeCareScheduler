@@ -1,20 +1,21 @@
 /*Mount the route module only
 This is the cleaner entry file: load dependencies, connect database,
 register middleware, mount routes, then start the server.*/
+
 require('dotenv').config();
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 
 const Caregiver = require("./models/Caregiver");
-const authRoutes = require("./routes/auth");
-const clientRoutes = require("./routes/clients");
-const caregiverRoutes = require("./routes/caregivers");
+const authRoutes = require("./routes/authRoutes");
+const clientRoutes = require("./routes/clientRoutes");
+const caregiverRoutes = require("./routes/caregiverRoutes");
 const supaBase = require("./utils/filestorageHelper");
-const scheduleRoutes = require("./routes/schedules");
-const leaveRequestRoutes = require("./routes/leaveRequests");
+const scheduleRoutes = require("./routes/scheduleRoutes");
+const leaveRequestRoutes = require("./routes/leaveRequestRoutes");
 
-const visitLogRoutes = require("./routes/visitLogs");
+const visitLogRoutes = require("./routes/visitLogRoutes");
 
 const app = express();
 
@@ -42,6 +43,7 @@ app.use("/api/visits", visitLogRoutes);
 //Connect to MongoDB (local for now, switch to Atlas later)
 mongoose
   .connect(process.env.MONGO_URI) //"mongodb://localhost:27017/homeCare"
+  //.then(() => console.log("✅ Connected to MongoDB"))
   .then(() => console.log("✅ Connected to MongoDB with path " + process.env.MONGO_URI))
   .catch((err) => console.error("❌ MongoDB connection error:", err));
 
@@ -59,6 +61,7 @@ app.use("/api/caregivers", caregiverRoutes);
 app.use("/api/clients", clientRoutes);
 app.use("/api/schedules", scheduleRoutes);
 app.use("/api/leave-requests", leaveRequestRoutes);
+app.use("/api/visit-logs", visitLogRoutes);
 
 //------------HSE Data Import (placeholder)----------
 app.post("/api/hse-import", (req, res) => {

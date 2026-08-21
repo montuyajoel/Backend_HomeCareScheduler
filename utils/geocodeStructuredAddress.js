@@ -11,8 +11,11 @@ const GEOCODE_USER_AGENT = process.env.GEOCODE_USER_AGENT || "HomeCareScheduler/
 async function geocodeStructuredAddress({ addressLine, town, city, county, postCode }) {
     const startTime = Date.now();
     const addressStr = [addressLine, town, city, county, postCode].filter(Boolean).join(", ");
+    console.log('Geocoding address(addressStr): ', addressStr);
+    
     try {
         const response = await AXIOS.get(GEOCODE_PROVIDER_URL, {
+
             params: {
                 street: addressLine,
                 town: town,
@@ -28,6 +31,7 @@ async function geocodeStructuredAddress({ addressLine, town, city, county, postC
         const durationMs = Date.now() - startTime;
 
         if (!response.data || response.data.length === 0) {
+            //logExternal(`Geocoding failed for address: ${addressStr}`);
             logExternal('NominatimGeocode', `Address not found: "${addressStr}"`, 404, durationMs);
             throw new Error("Address could not be located. Please check the address details and try again.");
         }
@@ -36,18 +40,19 @@ async function geocodeStructuredAddress({ addressLine, town, city, county, postC
             latitude: parseFloat(response.data[0].lat),
             longitude: parseFloat(response.data[0].lon),
         };
-        // Log request info
-        logExternal('NominatimGeocode', `Geocoded "${addressStr}" -> (${result.latitude}, ${result.longitude})`, response.status, durationMs);
-
+        //Log Request Info
+        logExternal('NominatimGeocode', `Geocoding successful for address "${addressStr}" -> (${result.latitude}, ${result.longitude})`, response.status, durationMs);
+        
         return result;
     } catch (error) {
         const durationMs = Date.now() - startTime;
-        const errorMsg = error.response?.data?.message || error.message;
+        const errorMsg = error.response?.data?.error || error.message;
         const status = error.response?.status || 'FAILED';
-
-        logExternal('NominatimGeocode', `Error: ${errorMsg}`, status, durationMs);
+        logExternal('NominatimGeocode', `Error geocoding address "${addressStr}": ${errorMsg}`, status, durationMs);
+        //throw new Error(`Geocoding failed: ${errorMsg}`);
         throw error;
     }
 }
 
-module.exports = geocodeStructuredAddress;
+//module.exports = { geocodeStructuredAddress };
+module.exports =  geocodeStructuredAddress;

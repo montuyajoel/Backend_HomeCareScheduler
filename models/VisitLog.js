@@ -50,7 +50,7 @@ const VisitLogSchema = new mongoose.Schema(
         note: { type: String },
         reviewRequired: {
             type: String,
-            enum: ["false", "true", "pending", "approved", "rejected"],
+            enum: ["false", "pending-review", "reviewed"],
             default: "false",
         },
     },
