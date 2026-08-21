@@ -13,14 +13,17 @@ const {
     updateClientAddress,
     updateClientStatus,
     deleteClient,
-    uploadCarePlan,
-    downloadCarePlan,
-    deleteCarePlan,
-    updateCarePlan,
     updateEmergencyContact,
     updateNote
 
 } = require("../controllers/clientController");
+
+const {
+    uploadCarePlan,
+    downloadCarePlan,
+    deleteCarePlan,
+    updateCarePlan
+} = require("../controllers/carePlanController");
 
 //route only define endpoint+middleware,only logged in admin users can get all clients
 router.get("/", protect, adminOnly, getAllClients);
@@ -33,7 +36,7 @@ router.put("/status/:clientId", protect, adminOnly, updateClientStatus);
 router.delete("/:clientId", protect, adminOnly, deleteClient);
 
 //-------carePlan------------
-router.put("/careplan/upload/:clientCode", protect, adminOnly,
+router.post("/careplan/upload/:clientCode", protect, adminOnly,
     fileUploadMiddleware.single("file"), uploadCarePlan);
 router.get("/careplan/download/:clientCode", protect, downloadCarePlan);
 router.delete("/careplan/:clientCode", protect, adminOnly, deleteCarePlan);

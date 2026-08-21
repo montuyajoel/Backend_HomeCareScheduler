@@ -49,10 +49,16 @@ const VisitLogSchema = new mongoose.Schema(
 
         note: { type: String },
         reviewRequired: {
-            type: String,
-            enum: ["false", "pending-review", "reviewed"],
-            default: "false",
+            type: Boolean,
+            enum: [false, true],
+            default: false,
         },
+        //if reviewRequired is true, then reviewStatus is set to "pending" by default, and can be updated to "approved" or "rejected" by admin
+        reviewStatus: {
+            type: String,
+            enum: ["pending-review", "not-required", "approved", "rejected"],
+            default: "not-required",
+        }
     },
     
     { timestamps: true }

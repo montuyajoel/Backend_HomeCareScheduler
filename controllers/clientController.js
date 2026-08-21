@@ -391,10 +391,6 @@ module.exports = {
     getAddressDiff,
     updateClientStatus,
     deleteClient,
-    uploadCarePlan,
-    downloadCarePlan,
-    deleteCarePlan,
-    updateCarePlan,
     updateEmergencyContact,
     updateNote
 };

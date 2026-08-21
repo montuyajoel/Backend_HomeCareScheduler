@@ -7,6 +7,7 @@ const Schedule = require("../models/Schedule");
 const Caregiver = require("../models/Caregiver");
 //const Client = require("../models/Client");
 const User = require("../models/User");
+const Client = require("../models/Client");
 const { getUpcoming2WeeksShifts } = require("../controllers/getUpcoming2WeeksShifts")
 
 const { getDistanceInMeters } = require("../utils/geoUtils");
@@ -92,7 +93,7 @@ const getTodayShifts = async (req, res) => {
             const visitLogs = await VisitLog.find({ schedule: { $in: ShiftIds } });
             const now = new Date();
 
-            const result = shifts.map((shift) => {
+            const result = await Promise.all(shifts.map(async (shift) => {
                 const log = visitLogs.find((v) => v.schedule.toString() === shift._id.toString() );
 
                 /*const [startHour, startMinute] = shift.startTime.split(":").map(Number);
@@ -111,9 +112,11 @@ const getTodayShifts = async (req, res) => {
 
                 const isClockInTimeEnabled = now >= earliestEnabledTime;
 
+                const clientDetails = await Client.findById(shift.client._id);
+                
                 return {
                     scheduleId: shift._id,
-                    client: shift.client,
+                    client: clientDetails,
                     startTime: shift.startTime,
                     endTime: shift.endTime,
                     hasClockedIn: !!log?.clockIn?.time,
@@ -123,7 +126,7 @@ const getTodayShifts = async (req, res) => {
                     isClockInTimeEnabled, //frontend uses this directly for the disabled-button hint text, so don't need to recalculate
                     earliestEnabledTimeFormatted: earliestEnabledTime.toLocaleString("en-GB"),
                 };
-            })
+            }))
             //.filter((shift) => !shift.hasClockedOut);//remove the completed(clocked-out) shifts from the list
             
             //distinguish "no shifts today" from "all shifts already completed"
@@ -469,7 +472,7 @@ const clockOut = async (req, res) => {
         });
 
         const saved = await newVisit.save();
-        res.status(201).json({ success: true, data: saved });
+       // res.status(201).json({ success: true, data: saved });
         visit.status = "completed";
 
         console.log('VISITdetail------------------------>>', visit)
