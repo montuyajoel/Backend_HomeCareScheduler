@@ -3,6 +3,7 @@ This is the cleaner entry file: load dependencies, connect database,
 register middleware, mount routes, then start the server.*/
 
 require("dotenv").config();
+require("./utils/irelandTime");
 const express = require("express");
 const cors = require("cors");
 

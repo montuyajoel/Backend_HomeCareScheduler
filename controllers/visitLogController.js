@@ -11,6 +11,16 @@ const Client = require("../models/Client");
 const { getUpcoming2WeeksShifts } = require("../controllers/getUpcoming2WeeksShifts")
 
 const { getDistanceInMeters } = require("../utils/geoUtils");
+const {
+    now,
+    getStartOfDay,
+    getEndOfDay,
+    getStartOfTomorrow,
+    isSameCalendarDay,
+    getShiftStartDate,
+    getShiftEndDate,
+    formatDateTime,
+} = require("../utils/irelandTime");
 
 //-----------------all unifies to a 20 mins windows------------------------
 //Clock In button becomes enables 20 mins before shift starts
@@ -66,21 +76,6 @@ function buildVisitLogByScheduleId(visitLogs) {
     return result;
 }
 
-function getShiftStartDate(shift) {
-    const [startHour, startMinute] = shift.startTime.split(":").map(Number);
-    const shiftStart = new Date(shift.date);
-    shiftStart.setHours(startHour, startMinute, 0, 0);
-    return shiftStart;
-}
-
-//helper function to get the shift end date-time as a Date object
-function getShiftEndDate(shift) {
-    const [endHour, endMinute] = shift.endTime.split(":").map(Number);
-    const shiftEnd = new Date(shift.date);
-    shiftEnd.setHours(endHour, endMinute, 0, 0);
-    return shiftEnd;
-}
-
 const getTodayShifts = async (req, res) => {
     try {
             //const userId = req.user._id; //current login user Id, not the caregiver ID
@@ -97,11 +92,8 @@ const getTodayShifts = async (req, res) => {
 
             const caregiverId = caregiver._id; //the actual Caregiver ID for querying Schedule
 
-            const startOfDay =new Date();
-            startOfDay.setHours(0, 0, 0, 0);
-
-            const endOfDay = new Date();
-            endOfDay.setHours(23, 59, 59, 999);
+            const startOfDay = getStartOfDay();
+            const endOfDay = getEndOfDay();
 
             //sorted ascending by start time, earliest shift appears first
             const shifts = await Schedule.find({
@@ -120,7 +112,7 @@ const getTodayShifts = async (req, res) => {
             const ShiftIds = shifts.map((s) => s._id);
             const visitLogs = await VisitLog.find({ schedule: { $in: ShiftIds } });
             const visitLogByScheduleId = buildVisitLogByScheduleId(visitLogs);
-            const now = new Date();
+            const currentTime = now();
 
             const result = await Promise.all(shifts.map(async (shift) => {
                 const log = visitLogByScheduleId.get(shift._id.toString());
@@ -139,7 +131,7 @@ const getTodayShifts = async (req, res) => {
                 const earliestEnabledTime = new Date(shiftStart);
                 earliestEnabledTime.setMinutes(earliestEnabledTime.getMinutes() - CLOCK_IN_BUTTON_LEAD_MINUTES);
 
-                const isClockInTimeEnabled = now >= earliestEnabledTime;
+                const isClockInTimeEnabled = currentTime >= earliestEnabledTime;
 
                 const clientDetails = await Client.findById(shift.client._id);
                 
@@ -153,7 +145,7 @@ const getTodayShifts = async (req, res) => {
                     status: log?.status || null, //"in-progress" or "completed" or null
                     visitLogId: log?._id || null,
                     isClockInTimeEnabled, //frontend uses this directly for the disabled-button hint text, so don't need to recalculate
-                    earliestEnabledTimeFormatted: earliestEnabledTime.toLocaleString("en-GB"),
+                    earliestEnabledTimeFormatted: formatDateTime(earliestEnabledTime),
                 };
             }))
             //.filter((shift) => !shift.hasClockedOut);//remove the completed(clocked-out) shifts from the list
@@ -233,14 +225,7 @@ const clockIn = async (req, res) => {
             });
         }
 
-        //the shift date must be today
-        const today = new Date();
-        const shiftDate = new Date(shift.date);
-        const isSameDay = today.getFullYear() === shiftDate.getFullYear() &&
-            today.getMonth() === shiftDate.getMonth() &&
-            today.getDate() === shiftDate.getDate();
-        
-        if (!isSameDay) {
+        if (!isSameCalendarDay(now(), shift.date)) {
             return res.status(400).json({
                 success: false, message: "This shift is not scheduled for today.",
                 code: "SHIFT_MISMATCH",
@@ -536,11 +521,9 @@ function getSchedulePhase(shift, visitLog, now) {
 // Admin: caregivers on duty today, with schedule counts and current/upcoming/done lists
 const getAllCaregiversWithShiftToday = async (req, res) => {
     try {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const tomorrow = new Date(today);
-        tomorrow.setDate(tomorrow.getDate() + 1);
-        const now = new Date();
+        const today = getStartOfDay();
+        const tomorrow = getStartOfTomorrow();
+        const currentTime = now();
 
         const shiftsToday = await Schedule.find({
             date: { $gte: today, $lt: tomorrow },
@@ -580,7 +563,7 @@ const getAllCaregiversWithShiftToday = async (req, res) => {
 
             const entry = byCaregiver.get(caregiverId);
             const visitLog = visitLogByScheduleId.get(shift._id.toString());
-            const phase = getSchedulePhase(shift, visitLog, now);
+            const phase = getSchedulePhase(shift, visitLog, currentTime);
 
             if (phase === "cancelled") continue;
 

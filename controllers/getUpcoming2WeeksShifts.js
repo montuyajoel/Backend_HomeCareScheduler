@@ -4,6 +4,15 @@ const Caregiver = require("../models/Caregiver");
 const Schedule = require("../models/Schedule");
 const VisitLog = require("../models/VisitLog");
 
+const {
+    now,
+    getStartOfDay,
+    getEndOfDay,
+    addDays,
+    getShiftStartDate,
+    formatDateTime,
+} = require("../utils/irelandTime");
+
 const CLOCK_IN_BUTTON_LEAD_MINUTES = 20;
 
 const { ObjectId } = require('mongodb');
@@ -16,13 +25,6 @@ const getCaregiverByUserId = async (userId) => {
     return await Caregiver.findOne({
         _id: new ObjectId(user.caregiverId) });
 };//helper
-
-function getShiftStartDate(shift) {
-    const [startHour, startMinute] = shift.startTime.split(":").map(Number);
-    const shiftStart = new Date(shift.date);
-    shiftStart.setHours(startHour, startMinute, 0, 0);
-    return shiftStart;
-}
 
 // Get all shifts for 14 days (today + 13 days) for the logged-in caregiver
 const getUpcoming2WeeksShifts = async (req, res) => {
@@ -41,14 +43,8 @@ const getUpcoming2WeeksShifts = async (req, res) => {
 
         const caregiverId = caregiver._id; //the actual Caregiver ID for querying Schedule
 
-        //start from today at 00:00:00
-        const startDate = new Date();
-        startDate.setHours(0, 0, 0, 0);
-
-        //include today and the following 13 days, exactly 14 calendar days
-        const endDate = new Date(startDate);
-        endDate.setDate(endDate.getDate() + 13);
-        endDate.setHours(23, 59, 59, 999);
+        const startDate = getStartOfDay();
+        const endDate = getEndOfDay(addDays(startDate, 13));
 
         //sorted ascending by date and start time
         const shifts = await Schedule.find({
@@ -69,7 +65,7 @@ const getUpcoming2WeeksShifts = async (req, res) => {
             schedule: { $in: ShiftIds },
         });
 
-        const now = new Date();
+        const currentTime = now();
 
         const result = shifts
             .map((shift) => {
@@ -84,7 +80,7 @@ const getUpcoming2WeeksShifts = async (req, res) => {
                     earliestEnabledTime.getMinutes() - CLOCK_IN_BUTTON_LEAD_MINUTES
                 );
 
-                const isClockInTimeEnabled = now >= earliestEnabledTime;
+                const isClockInTimeEnabled = currentTime >= earliestEnabledTime;
 
                 return {
                     scheduleId: shift._id,
@@ -97,7 +93,7 @@ const getUpcoming2WeeksShifts = async (req, res) => {
                     status: log?.status || null, //"in-progress" or "completed" or null
                     visitLogId: log?._id || null,
                     isClockInTimeEnabled, //frontend uses this directly for the disabled-button hint text, so don't need to recalculate
-                    earliestEnabledTimeFormatted: earliestEnabledTime.toLocaleString("en-GB"),
+                    earliestEnabledTimeFormatted: formatDateTime(earliestEnabledTime),
                 };
             })
             .filter((shift) => !shift.hasClockedOut); //remove the completed(clocked-out) shifts from the list

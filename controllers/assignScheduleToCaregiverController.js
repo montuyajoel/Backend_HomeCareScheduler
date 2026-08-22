@@ -8,6 +8,11 @@ const schedule = require("../models/Schedule");
 const client = require("../models/Client");
 const caregiver = require("../models/Caregiver");
 const auditLog = require("../models/AuditLog");
+const {
+    getStartOfDay,
+    getEndOfDay,
+    getWeekdayName,
+} = require("../utils/irelandTime");
 //const user = require("../models/User");
 
 //const { ObjectId } = require('mongodb');
@@ -25,13 +30,9 @@ function timeToMinutes(timeStr) {
     return hours * 60 + minutes;
 }
 
-//-----------------Helper: which weekday does this date fall on----------------------------
+//-----------------Helper: which weekday does this date fall on (Ireland)----------------------------
 //Convert the requested date to an English weekday name,
 //matching the `day` field format in Caregiver.availability.
-function getWeekdayName(dateStr) {
-    const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-    return days[new Date(dateStr).getDay()];
-}
 
 //-----------Rule 7: is the requested shift within an availability window?--------------
 /*Rule 7 — checks if, Among all of this caregiver's availability blocks for the requested weekday, at least one block fully
@@ -60,11 +61,8 @@ function isWithinAvailability(caregiverDoc, weekday, startTime, endTime) {
 //If the caregiver has no shifts that day yet, this check passes automatically.
 */
 async function checkShiftGap(caregiverId, dateObj, startTime, endTime) {
-    //??????????caregiver的 employeeCode?
-    const dayStart = new Date(dateObj);
-    dayStart.setHours(0, 0, 0, 0);
-    const dayEnd = new Date(dateObj);
-    dayEnd.setHours(23, 59, 59, 999);
+    const dayStart = getStartOfDay(dateObj);
+    const dayEnd = getEndOfDay(dateObj);
 
     const existingShifts = await schedule.find({
         caregiver: caregiverId,
