@@ -12,7 +12,7 @@ const { getUpcoming2WeeksShifts } = require("../controllers/getUpcoming2WeeksShi
 
 const { getDistanceInMeters } = require("../utils/geoUtils");
 const {
-    now,
+    now: getNow,
     getStartOfDay,
     getEndOfDay,
     getStartOfTomorrow,
@@ -112,7 +112,7 @@ const getTodayShifts = async (req, res) => {
             const ShiftIds = shifts.map((s) => s._id);
             const visitLogs = await VisitLog.find({ schedule: { $in: ShiftIds } });
             const visitLogByScheduleId = buildVisitLogByScheduleId(visitLogs);
-            const currentTime = now();
+            const currentTime = getNow();
 
             const result = await Promise.all(shifts.map(async (shift) => {
                 const log = visitLogByScheduleId.get(shift._id.toString());
@@ -225,7 +225,7 @@ const clockIn = async (req, res) => {
             });
         }
 
-        if (!isSameCalendarDay(now(), shift.date)) {
+        if (!isSameCalendarDay(getNow(), shift.date)) {
             return res.status(400).json({
                 success: false, message: "This shift is not scheduled for today.",
                 code: "SHIFT_MISMATCH",
@@ -523,7 +523,7 @@ const getAllCaregiversWithShiftToday = async (req, res) => {
     try {
         const today = getStartOfDay();
         const tomorrow = getStartOfTomorrow();
-        const currentTime = now();
+        const currentTime = getNow();
 
         const shiftsToday = await Schedule.find({
             date: { $gte: today, $lt: tomorrow },
