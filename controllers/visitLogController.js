@@ -605,12 +605,4 @@ const getAllCaregiversWithShiftToday = async (req, res) => {
     }
 };
 
-// Format date-time as day/month/year hour:min:second
-function formatDateTime(date) {
-    const dd = String(date.getDate()).padStart(2, "0");
-    const mm = String(date.getMonth() + 1).padStart(2, "0");
-    const yyyy = date.getFullYear();
-    const time = date.toTimeString().split(" ")[0]; // HH:MM:SS
-    return `${dd}/${mm}/${yyyy} ${time}`;
-}
 module.exports = { getTodayShifts,clockIn, clockOut, getUpcoming2WeeksShifts, getAllCaregiversWithShiftToday };
