@@ -37,7 +37,35 @@ const getCaregiverByUserId = async (userId) => {
         _id: new ObjectId(user.caregiverId) });
 };//helper
 
-//helper function to get the shift start date-time as a Date object
+function pickBestVisitLog(logs) {
+    if (!logs || logs.length === 0) return null;
+    if (logs.length === 1) return logs[0];
+
+    const completed = logs.find((log) => log.status === "completed" || log.clockOut?.time);
+    if (completed) return completed;
+
+    return logs.reduce((latest, log) => {
+        const latestTime = latest.updatedAt ? new Date(latest.updatedAt) : new Date(0);
+        const logTime = log.updatedAt ? new Date(log.updatedAt) : new Date(0);
+        return logTime > latestTime ? log : latest;
+    });
+}
+
+function buildVisitLogByScheduleId(visitLogs) {
+    const grouped = new Map();
+    for (const log of visitLogs) {
+        const key = log.schedule.toString();
+        if (!grouped.has(key)) grouped.set(key, []);
+        grouped.get(key).push(log);
+    }
+
+    const result = new Map();
+    for (const [key, logs] of grouped) {
+        result.set(key, pickBestVisitLog(logs));
+    }
+    return result;
+}
+
 function getShiftStartDate(shift) {
     const [startHour, startMinute] = shift.startTime.split(":").map(Number);
     const shiftStart = new Date(shift.date);
@@ -45,7 +73,7 @@ function getShiftStartDate(shift) {
     return shiftStart;
 }
 
-//helper function to get the shift start date-time as a Date object
+//helper function to get the shift end date-time as a Date object
 function getShiftEndDate(shift) {
     const [endHour, endMinute] = shift.endTime.split(":").map(Number);
     const shiftEnd = new Date(shift.date);
@@ -91,10 +119,11 @@ const getTodayShifts = async (req, res) => {
             //console.log("shiftId ====== ");
             const ShiftIds = shifts.map((s) => s._id);
             const visitLogs = await VisitLog.find({ schedule: { $in: ShiftIds } });
+            const visitLogByScheduleId = buildVisitLogByScheduleId(visitLogs);
             const now = new Date();
 
             const result = await Promise.all(shifts.map(async (shift) => {
-                const log = visitLogs.find((v) => v.schedule.toString() === shift._id.toString() );
+                const log = visitLogByScheduleId.get(shift._id.toString());
 
                 /*const [startHour, startMinute] = shift.startTime.split(":").map(Number);
                 const shiftStart = new Date(shift.date);
@@ -456,32 +485,140 @@ const clockOut = async (req, res) => {
                 exceptionType: ["early-clock-out"],
             });
         }
-        //-----------6 Create VisitLog --------------
-        const flaggedLate = !isWithinOnTimeWindow && ( isLate || isEarly );
+        //-----------6 Update VisitLog and Schedule --------------
+        const flaggedLate = !isWithinOnTimeWindow && (isLate || isEarly);
 
-        const newVisit = new VisitLog({
-            schedule: shift._id,
-            caregiver: caregiverId, client: clientId,
-            clockIn: { time: now, location: { latitude, longitude },},
-            clockOut: { time: null, location:{latitude:null, longitude:null}},
-            status: "in-progress", isException: flaggedLate,
-            exceptionType: flaggedLate ? ["late-clock-out"] : ["early-clock-out"],
-            note: flaggedLate ? note : undefined,
-            reviewRequired: flaggedLate,
-            reviewStatus: flaggedLate ? "pending-review" : "not-required",
-        });
-
-        const saved = await newVisit.save();
-       // res.status(201).json({ success: true, data: saved });
         visit.status = "completed";
 
-        console.log('VISITdetail------------------------>>', visit)
+        if (flaggedLate) {
+            visit.isException = true;
+            const clockOutException = isLate ? "late-clock-out" : "early-clock-out";
+            if (!visit.exceptionType.includes(clockOutException)) {
+                visit.exceptionType.push(clockOutException);
+            }
+            if (note) {
+                visit.note = visit.note ? `${visit.note}; ${note}` : note;
+            }
+            visit.reviewRequired = true;
+            visit.reviewStatus = "pending-review";
+        }
+
+        shift.status = "completed";
+        await shift.save();
+
         const updated = await visit.save();
         res.status(200).json({ success: true, data: updated });
 
     } catch (error) {
         console.error("CLOCKOUT ERROR:", error);
         res.status(400).json({ success: false, message: error.message });
+    }
+};
+
+// Classify a shift as current / upcoming / done using visit log + time window
+function getSchedulePhase(shift, visitLog, now) {
+    if (shift.status === "cancelled") return "cancelled";
+    if (visitLog?.status === "completed" || visitLog?.clockOut?.time || shift.status === "completed") {
+        return "done";
+    }
+    if (visitLog?.status === "in-progress" || visitLog?.clockIn?.time || shift.status === "in-progress") {
+        return "current";
+    }
+
+    const shiftStart = getShiftStartDate(shift);
+    const shiftEnd = getShiftEndDate(shift);
+
+    if (now >= shiftStart && now <= shiftEnd) return "current";
+    if (now > shiftEnd) return "done";
+    return "upcoming";
+}
+
+// Admin: caregivers on duty today, with schedule counts and current/upcoming/done lists
+const getAllCaregiversWithShiftToday = async (req, res) => {
+    try {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        const now = new Date();
+
+        const shiftsToday = await Schedule.find({
+            date: { $gte: today, $lt: tomorrow },
+            status: { $ne: "cancelled" },
+        })
+            .populate("caregiver", "employeeCode fullName phoneNumber status")
+            .populate("client", "fullName clientCode address")
+            .sort({ startTime: 1 });
+
+        if (shiftsToday.length === 0) {
+            return res.status(200).json({
+                success: true,
+                data: [],
+                message: "No caregivers with shifts today.",
+            });
+        }
+
+        const shiftIds = shiftsToday.map((s) => s._id);
+        const visitLogs = await VisitLog.find({ schedule: { $in: shiftIds } });
+        const visitLogByScheduleId = buildVisitLogByScheduleId(visitLogs);
+
+        const byCaregiver = new Map();
+
+        for (const shift of shiftsToday) {
+            if (!shift.caregiver) continue;
+
+            const caregiverId = shift.caregiver._id.toString();
+            if (!byCaregiver.has(caregiverId)) {
+                byCaregiver.set(caregiverId, {
+                    caregiver: shift.caregiver,
+                    scheduleCount: 0,
+                    counts: { current: 0, upcoming: 0, done: 0 },
+                    schedules: { current: [], upcoming: [], done: [] },
+                    onDuty: false,
+                });
+            }
+
+            const entry = byCaregiver.get(caregiverId);
+            const visitLog = visitLogByScheduleId.get(shift._id.toString());
+            const phase = getSchedulePhase(shift, visitLog, now);
+
+            if (phase === "cancelled") continue;
+
+            const scheduleSummary = {
+                scheduleId: shift._id,
+                client: shift.client,
+                startTime: shift.startTime,
+                endTime: shift.endTime,
+                scheduleStatus: shift.status,
+                visitStatus: visitLog?.status || null,
+                hasClockedIn: !!visitLog?.clockIn?.time,
+                hasClockedOut: !!visitLog?.clockOut?.time,
+                phase,
+            };
+
+            entry.scheduleCount += 1;
+            entry.counts[phase] += 1;
+            entry.schedules[phase].push(scheduleSummary);
+            if (phase === "current") entry.onDuty = true;
+        }
+
+        const data = Array.from(byCaregiver.values()).sort((a, b) => {
+            if (a.onDuty !== b.onDuty) return a.onDuty ? -1 : 1;
+            return (a.caregiver.fullName || "").localeCompare(b.caregiver.fullName || "");
+        });
+
+        res.status(200).json({
+            success: true,
+            data,
+            summary: {
+                caregiverCount: data.length,
+                onDutyCount: data.filter((c) => c.onDuty).length,
+                totalSchedules: shiftsToday.length,
+            },
+        });
+    } catch (error) {
+        console.error("ERROR fetching caregivers with shifts today:", error);
+        res.status(500).json({ success: false, message: error.message });
     }
 };
 
@@ -493,4 +630,4 @@ function formatDateTime(date) {
     const time = date.toTimeString().split(" ")[0]; // HH:MM:SS
     return `${dd}/${mm}/${yyyy} ${time}`;
 }
-module.exports = { getTodayShifts,clockIn, clockOut, getUpcoming2WeeksShifts };
+module.exports = { getTodayShifts,clockIn, clockOut, getUpcoming2WeeksShifts, getAllCaregiversWithShiftToday };
