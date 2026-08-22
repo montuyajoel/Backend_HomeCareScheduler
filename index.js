@@ -16,6 +16,7 @@ const scheduleRoutes = require("./routes/scheduleRoutes");
 const leaveRequestRoutes = require("./routes/leaveRequestRoutes");
 
 const visitLogRoutes = require("./routes/visitLogRoutes");
+const { sanitizeMongoUri } = require("./utils/sanitizeMongoUri");
 
 const app = express();
 
@@ -42,10 +43,11 @@ app.use("/api/visits", visitLogRoutes);
 
 //Connect to MongoDB (local for now, switch to Atlas later)
 mongoose
-  .connect(process.env.MONGO_URI) //"mongodb://localhost:27017/homeCare"
-  //.then(() => console.log("✅ Connected to MongoDB"))
-  .then(() => console.log("✅ Connected to MongoDB with path " + process.env.MONGO_URI))
-  .catch((err) => console.error("❌ MongoDB connection error:", err));
+  .connect(process.env.MONGO_URI)
+  .then(() => {
+    console.log("✅ Connected to MongoDB:", sanitizeMongoUri(process.env.MONGO_URI));
+  })
+  .catch((err) => console.error("❌ MongoDB connection error:", err.message));
 
 // Check Supabase Connection
 supaBase.checkSupabaseConnection();
