@@ -2,21 +2,19 @@
 This is the cleaner entry file: load dependencies, connect database,
 register middleware, mount routes, then start the server.*/
 
-require('dotenv').config();
+require("dotenv").config();
 const express = require("express");
-const mongoose = require("mongoose");
 const cors = require("cors");
 
-const Caregiver = require("./models/Caregiver");
 const authRoutes = require("./routes/authRoutes");
 const clientRoutes = require("./routes/clientRoutes");
 const caregiverRoutes = require("./routes/caregiverRoutes");
 const supaBase = require("./utils/filestorageHelper");
 const scheduleRoutes = require("./routes/scheduleRoutes");
 const leaveRequestRoutes = require("./routes/leaveRequestRoutes");
-
 const visitLogRoutes = require("./routes/visitLogRoutes");
-const { sanitizeMongoUri } = require("./utils/sanitizeMongoUri");
+const ensureDb = require("./middleware/ensureDb");
+const connectDB = require("./utils/connectDB");
 
 const app = express();
 
@@ -29,7 +27,7 @@ app.use((err, req, res, next) => {
   if (err instanceof SyntaxError && err.status === 400 && "body" in err) {
     return res.status(400).json({
       success: false,
-      message: "Invalid JSON in request body. Make sure the payload is valid JSON with double-quoted property names."
+      message: "Invalid JSON in request body. Make sure the payload is valid JSON with double-quoted property names.",
     });
   }
   next(err);
@@ -39,25 +37,15 @@ app.use((err, req, res, next) => {
 const requestLogger = require("./middleware/logger");
 app.use(requestLogger);
 
-app.use("/api/visits", visitLogRoutes);
-
-//Connect to MongoDB (local for now, switch to Atlas later)
-mongoose
-  .connect(process.env.MONGO_URI)
-  .then(() => {
-    console.log("✅ Connected to MongoDB:", sanitizeMongoUri(process.env.MONGO_URI));
-  })
-  .catch((err) => console.error("❌ MongoDB connection error:", err.message));
-
-// Check Supabase Connection
-supaBase.checkSupabaseConnection();
-
-//Health check route
+//Health check route (no DB required)
 app.get("/", (req, res) => {
   res.send("<h1>HomeCare Scheduler API</h1><p>Status: Online</p>");
 });
 
-//API routes
+// All API routes require a live MongoDB connection (important on Vercel serverless)
+app.use("/api", ensureDb);
+
+app.use("/api/visits", visitLogRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/caregivers", caregiverRoutes);
 app.use("/api/clients", clientRoutes);
@@ -70,6 +58,22 @@ app.post("/api/hse-import", (req, res) => {
   res.json({ success: true, message: "HSE import endpoint ready" });
 });
 
-//Start the server
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🚀 Server running on http://localhost:${PORT}`));
+// Check Supabase Connection (local dev only; non-blocking)
+if (!process.env.VERCEL) {
+  supaBase.checkSupabaseConnection();
+}
+
+// Local dev: start listening server
+if (require.main === module) {
+  const PORT = process.env.PORT || 5000;
+  connectDB()
+    .then(() => {
+      app.listen(PORT, () => console.log(`🚀 Server running on http://localhost:${PORT}`));
+    })
+    .catch((err) => {
+      console.error("❌ MongoDB connection error:", err.message);
+      process.exit(1);
+    });
+}
+
+module.exports = app;
