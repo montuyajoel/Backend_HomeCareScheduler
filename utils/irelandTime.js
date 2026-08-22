@@ -72,7 +72,11 @@ function getShiftEndDate(shift) {
 }
 
 function getStartOfDay(date = new Date()) {
-    const dateStr = getIrelandCalendarDateString(date);
+    if (typeof date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
+        return new Date(`${date}T00:00:00.000Z`);
+    }
+
+    const dateStr = getScheduleCalendarDateString(date);
     return new Date(`${dateStr}T00:00:00.000Z`);
 }
 
@@ -120,6 +124,7 @@ module.exports = {
     getStartOfTomorrow,
     isSameCalendarDay,
     getWeekdayName,
+    getScheduleCalendarDateString,
     applyTimeToDate,
     getShiftStartDate,
     getShiftEndDate,

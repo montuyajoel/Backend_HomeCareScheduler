@@ -261,6 +261,149 @@ async function seed() {
         },
     });
 
+    const cian = await ensureCaregiverWithUser({
+        email: "cian.murphy@homecare.ie",
+        employeeCode: "EMP012",
+        profile: {
+            fullName: "Cian Murphy",
+            gender: "Male",
+            age: 36,
+            address: {
+                addressLine: "21 Drumcondra Road Lower",
+                town: "Drumcondra",
+                city: "Dublin",
+                county: "Dublin",
+                postCode: "D09 H6F3",
+                latitude: 53.3612,
+                longitude: -6.2541,
+            },
+            phoneNumber: "+353874445566",
+            hasPetAllergy: false,
+            skills: ["Mobility Support", "Personal Care", "Medication Support"],
+            availability: [
+                { day: "Monday", startTime: "07:00", endTime: "15:00" },
+                { day: "Tuesday", startTime: "07:00", endTime: "15:00" },
+                { day: "Wednesday", startTime: "07:00", endTime: "15:00" },
+                { day: "Thursday", startTime: "07:00", endTime: "15:00" },
+                { day: "Friday", startTime: "07:00", endTime: "15:00" },
+            ],
+            status: "active",
+        },
+    });
+
+    const niamh = await ensureCaregiverWithUser({
+        email: "niamh.byrne@homecare.ie",
+        employeeCode: "EMP013",
+        profile: {
+            fullName: "Niamh Byrne",
+            gender: "Female",
+            age: 27,
+            address: {
+                addressLine: "14 Phibsborough Road",
+                town: "Phibsborough",
+                city: "Dublin",
+                county: "Dublin",
+                postCode: "D07 E5W4",
+                latitude: 53.3567,
+                longitude: -6.2734,
+            },
+            phoneNumber: "+353875556677",
+            hasPetAllergy: true,
+            skills: ["Dementia Care", "Personal Care", "Wellbeing Check"],
+            availability: [
+                { day: "Monday", startTime: "12:00", endTime: "20:00" },
+                { day: "Wednesday", startTime: "12:00", endTime: "20:00" },
+                { day: "Friday", startTime: "12:00", endTime: "20:00" },
+            ],
+            status: "active",
+        },
+    });
+
+    const patrickCaregiver = await ensureCaregiverWithUser({
+        email: "patrick.doyle@homecare.ie",
+        employeeCode: "EMP014",
+        profile: {
+            fullName: "Patrick Doyle",
+            gender: "Male",
+            age: 44,
+            address: {
+                addressLine: "6 Blackrock Road",
+                town: "Blackrock",
+                city: "Dublin",
+                county: "Dublin",
+                postCode: "A94 T8X2",
+                latitude: 53.3015,
+                longitude: -6.1778,
+            },
+            phoneNumber: "+353876667788",
+            hasPetAllergy: false,
+            skills: ["Palliative Care", "Meal Preparation", "Mobility Support"],
+            availability: [
+                { day: "Tuesday", startTime: "08:00", endTime: "16:00" },
+                { day: "Thursday", startTime: "08:00", endTime: "16:00" },
+                { day: "Saturday", startTime: "09:00", endTime: "17:00" },
+            ],
+            status: "active",
+        },
+    });
+
+    const siobhan = await ensureCaregiverWithUser({
+        email: "siobhan.mccarthy@homecare.ie",
+        employeeCode: "EMP015",
+        profile: {
+            fullName: "Siobhan McCarthy",
+            gender: "Female",
+            age: 38,
+            address: {
+                addressLine: "33 Cabra Road",
+                town: "Cabra",
+                city: "Dublin",
+                county: "Dublin",
+                postCode: "D07 K8N2",
+                latitude: 53.3678,
+                longitude: -6.2912,
+            },
+            phoneNumber: "+353877778899",
+            hasPetAllergy: false,
+            skills: ["Personal Care", "Medication Support", "Meal Preparation"],
+            availability: [
+                { day: "Monday", startTime: "09:00", endTime: "17:00" },
+                { day: "Wednesday", startTime: "09:00", endTime: "17:00" },
+                { day: "Friday", startTime: "09:00", endTime: "17:00" },
+            ],
+            status: "on-leave",
+        },
+    });
+
+    const jamesCaregiver = await ensureCaregiverWithUser({
+        email: "james.nolan@homecare.ie",
+        employeeCode: "EMP016",
+        profile: {
+            fullName: "James Nolan",
+            gender: "Male",
+            age: 31,
+            address: {
+                addressLine: "9 Swords Main Street",
+                town: "Swords",
+                city: "Dublin",
+                county: "Dublin",
+                postCode: "K67 X4Y2",
+                latitude: 53.4597,
+                longitude: -6.2181,
+            },
+            phoneNumber: "+353878889900",
+            hasPetAllergy: false,
+            skills: ["Wellbeing Check", "Mobility Support", "Personal Care"],
+            availability: [
+                { day: "Monday", startTime: "06:00", endTime: "14:00" },
+                { day: "Tuesday", startTime: "06:00", endTime: "14:00" },
+                { day: "Thursday", startTime: "06:00", endTime: "14:00" },
+                { day: "Friday", startTime: "06:00", endTime: "14:00" },
+            ],
+            status: "active",
+        },
+    });
+
     const sarahConnor = await Caregiver.findOne({ employeeCode: "EMP003" });
     const joelCaregiver = await Caregiver.findOne({ employeeCode: "EMP008" });
 
@@ -525,6 +668,54 @@ async function seed() {
         });
     }
 
+    if (cian && thomas) {
+        await ensureSchedule({
+            caregiver: cian._id,
+            client: thomas._id,
+            date: today,
+            startTime: "07:30:00",
+            endTime: "09:30:00",
+            status: "scheduled",
+            createdBy: adminUserId,
+        });
+    }
+
+    if (niamh && fiona) {
+        await ensureSchedule({
+            caregiver: niamh._id,
+            client: fiona._id,
+            date: today,
+            startTime: "13:00:00",
+            endTime: "15:00:00",
+            status: "scheduled",
+            createdBy: adminUserId,
+        });
+    }
+
+    if (patrickCaregiver && james) {
+        await ensureSchedule({
+            caregiver: patrickCaregiver._id,
+            client: james._id,
+            date: today,
+            startTime: "17:00:00",
+            endTime: "19:00:00",
+            status: "scheduled",
+            createdBy: adminUserId,
+        });
+    }
+
+    if (jamesCaregiver && mary) {
+        await ensureSchedule({
+            caregiver: jamesCaregiver._id,
+            client: mary._id,
+            date: today,
+            startTime: "06:30:00",
+            endTime: "08:30:00",
+            status: "scheduled",
+            createdBy: adminUserId,
+        });
+    }
+
     // --- Tomorrow ---
     if (sarahConnor && james) {
         await ensureSchedule({
@@ -555,6 +746,39 @@ async function seed() {
             date: tomorrow,
             startTime: "10:00:00",
             endTime: "12:00:00",
+            status: "scheduled",
+            createdBy: adminUserId,
+        });
+    }
+    if (cian && nora) {
+        await ensureSchedule({
+            caregiver: cian._id,
+            client: nora._id,
+            date: tomorrow,
+            startTime: "12:00:00",
+            endTime: "14:00:00",
+            status: "scheduled",
+            createdBy: adminUserId,
+        });
+    }
+    if (niamh && thomas) {
+        await ensureSchedule({
+            caregiver: niamh._id,
+            client: thomas._id,
+            date: tomorrow,
+            startTime: "09:00:00",
+            endTime: "11:00:00",
+            status: "scheduled",
+            createdBy: adminUserId,
+        });
+    }
+    if (patrickCaregiver && patrick) {
+        await ensureSchedule({
+            caregiver: patrickCaregiver._id,
+            client: patrick._id,
+            date: tomorrow,
+            startTime: "14:00:00",
+            endTime: "16:00:00",
             status: "scheduled",
             createdBy: adminUserId,
         });
@@ -628,6 +852,18 @@ async function seed() {
         endDate: addDays(today, 37),
         reason: "Annual leave",
         status: "pending",
+    });
+
+    await ensureLeaveRequest({
+        employeeCode: "EMP015",
+        fullName: "Siobhan McCarthy",
+        leaveType: "sick",
+        startDate: today,
+        endDate: addDays(today, 2),
+        reason: "Medical leave",
+        status: "approved",
+        approvedBy: adminUserId,
+        adminNotes: "Coverage with EMP012 and EMP013",
     });
 
     // Summary
