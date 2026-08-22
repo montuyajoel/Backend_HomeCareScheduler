@@ -38,8 +38,9 @@ const AdminSchema = new mongoose.Schema(
         }, //Automatically converts to lowercase to avoid duplicate entries
     },
     { timestamps: true,
-      collection:'admin'
-     }//automatically adds createdAt and updatedAt fields
+      collection: 'admin'
+    }, //specify collection name to avoid pluralization
+    //automatically adds createdAt and updatedAt fields
 );
 
 module.exports = mongoose.model("Admin", AdminSchema);

@@ -1,7 +1,7 @@
 const LeaveRequest = require("../models/LeaveRequests");
 const Caregiver = require("../models/Caregiver");
-const Schedule = require("../models/Schedule");
 const User = require("../models/User");
+const Schedule = require("../models/Schedule");
 const {ObjectId} = require("mongodb");
 const mongoose = require("mongoose");
 
@@ -60,9 +60,11 @@ const createLeaveRequest = async (req, res) => {
         // check if leave span applied is more than 30 days
         const leaveSpan = (new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24); // in days
         if (leaveSpan > 30) {
-            return res.status(400).json({ success: false, message: "Your leave request is longer than one month. Please double-check your start and end dates before submitting." });
+            return res.status(400).json({
+                success: false,
+                message: "Your leave request is longer than one month. Please double-check your start and end dates before submitting." });
         }
-
+        
         // Check for overlapping leave request
         const existingLeaveRequest = await CheckLeaveRequestOverlap(employeeCode, startDate, endDate);
 
@@ -90,7 +92,7 @@ const createLeaveRequest = async (req, res) => {
 const getLeaveRequests = async (req, res) => {
     try {
         const { status } = req.query; // Get the status from query parameters
-       
+
         let query = {};
         if (status) {
             query.status = status.toLowerCase(); // Filter by status if provided
@@ -109,7 +111,11 @@ const getLeaveRequests = async (req, res) => {
         });
 
         if (!leaveRequests || leaveRequests.length === 0) {
-            return res.status(200).json({ success: true, message: "No leave requests found." });
+            //return res.status(404).json({ success: false, message: "No leave requests found." });
+            return res.status(200).json({
+                success: true,
+                message: "No leave requests found."
+            });
         }
 
         // Sort leave requests by startDate in ascending order
@@ -127,7 +133,7 @@ const getLeaveRequests = async (req, res) => {
     }
 }
 
-// Update leave request status by admin
+//Update leave request status by admin
 const updateLeaveRequestStatus = async (req, res) => {
     try {
         const { status, adminNotes, leaveRequestId } = req.body;
@@ -158,7 +164,7 @@ const updateLeaveRequestStatus = async (req, res) => {
         leaveRequest.status = status;
         leaveRequest.adminNotes = adminNotes || "";
         leaveRequest.reviewedAt = new Date();
-        leaveRequest.approvedBy = req.user.id; // Assuming req.user.id contains the admin's ID
+        leaveRequest.approvedBy = req.user.id//Assuming req.user.id contains the admin's id
 
         await leaveRequest.save();
 
@@ -175,7 +181,7 @@ const updateLeaveRequestStatus = async (req, res) => {
             message: "Failed to update leave request status."
         });
     }
-}; 
+};
 
 // Allow caregiver to update the date and status if they want to cancel their leave request as long as it is still pending
 const updateLeaveRequestCaregiver = async (req, res) => {
@@ -184,19 +190,19 @@ const updateLeaveRequestCaregiver = async (req, res) => {
         const { type } = req.query;
         const { leaveRequestId } = req.params;
 
-        // Validate the request type
         if (!type || (type !== "cancel" && type !== "change_date")) {
-            return res.status(400).json({ success: false, message: "Invalid request type. Use 'cancel' or 'change_date'." });
+            return res.status(400).json({
+                success: false,
+                message: "Invalid request type. Use 'cancel' or 'change_date'."
+            });
         }
-        
+
         if(type === "change_date" && (!req.body.startDate || !req.body.endDate)){
             return res.status(400).json({ success: false, message: "For changing dates, both startDate and endDate are required." });
         }
-
         if(type === "change_date" && new Date(req.body.startDate) > new Date(req.body.endDate)){
             return res.status(400).json({ success: false, message: "Start date must be before end date." });
         }
-
         if(type === "change_date" && ((new Date(req.body.endDate) - new Date(req.body.startDate)) / (1000 * 60 * 60 * 24) > 30)){
             return res.status(400).json({ success: false, message: "Your leave request is longer than one month. Please double-check your start and end dates before submitting." });
         }
@@ -208,6 +214,11 @@ const updateLeaveRequestCaregiver = async (req, res) => {
         if (!leaveRequest) {
             return res.status(404).json({ success: false, message: "Leave request not found." });
         }
+
+        // Check if the caregiver is the owner of the leave request
+        /*if (leaveRequest.employeeCode  !== caregiverCode) {
+            return res.status(403).json({ success: false, message: "You are not authorized to update this leave request." });
+        }*/
 
         // Allow caregiver to cancel their leave request if it is still pending
         if (leaveRequest.status === "pending" && type === "cancel") {
@@ -227,10 +238,15 @@ const updateLeaveRequestCaregiver = async (req, res) => {
             // Check for overlapping leave requests
             const existingLeaveRequest = await CheckLeaveRequestOverlap(caregiverCode, startDate, endDate);
 
-            // If there's an existing leave request that overlaps and it's not the current one being updated, return an error
+            //If there's an existing leave request that overlaps
+            //and it's not the current one being updated, return an error
             if (existingLeaveRequest && existingLeaveRequest._id.toString() !== leaveRequestId) {
                 return res.status(400).json({ success: false, message: "You already have a leave request that overlaps with the requested dates." });
             }
+
+            //if (existingLeaveRequest) {
+            //    return res.status(400).json({ success: false, message: "You already have a leave request that overlaps with the requested dates." });
+            //}
 
             // Allow caregiver to update the start and end dates if needed
             leaveRequest.startDate = startDate || leaveRequest.startDate;
@@ -305,7 +321,9 @@ const checkAffectedShifts = async (req, res) => {
             res.status(200).json({ success: false, data: affectedShifts });
         }
         else {
-             return res.status(200).json({ success: true, message: "No affected shifts found for the caregiver's leave request." });
+            return res.status(200).json({
+                success: true,
+                message: "No affected shifts found for the caregiver's leave request." });
         }
 
     } catch (error) {
@@ -337,10 +355,10 @@ const getMyLeaveRequests = async (req, res) => {
 
 module.exports = {
     createLeaveRequest,
-    getLeaveRequests,
+    getLeaveRequests, //admin
     updateLeaveRequestStatus,
     getLeaveRequestById,
-    getMyLeaveRequests,
+    getMyLeaveRequests,  //caregiver
     updateLeaveRequestCaregiver,
     checkAffectedShifts
 };

@@ -1,17 +1,21 @@
 const mongoose = require("mongoose"); //import Mongoose, connects JavaScript to MongoDB
+const { CLIENT_STATUSES } = require("../constants/clientStatuses"); //import the list of valid client statuses
+const { MOBILITY_STATUSES } = require("../constants/mobilityStatuses");
+const { COGNITIVE_STATUSES } = require("../constants/cognitiveStatuses");
+const { INACTIVE_STATUS_REASONS } = require("../constants/inactiveStatusReasons");
 
 //-------------Sub-schema: emergency contact-------
 const emergencyContactSchema = new mongoose.Schema({
     name: { type: String, required: true, trim: true, },
 
     relationship: { type: String, required: true, trim: true, },
-
+    
     phoneNumber: {
         type: String,
         required: true,
         trim: true,
         validate: {
-            validator: function (v) {
+            validator: function(v) {
                 return /^\+?[0-9]{7,15}$/.test(v);
             },
             message: "Invalid phone number",
@@ -28,11 +32,11 @@ const deceasedDetailsSchema = new mongoose.Schema({
 },
     { _id: false }); //sub docs don't need their own id
 
-//
 const statusDetailsSchema = new mongoose.Schema({
         inactiveReason: {
         type: String,
-        enum: ["hospitalised", "temporary-service-paused", 'termination-of-service', "family-request", "other", "None"],
+        //enum: ["hospitalised", "temporary-service-paused", 'termination-of-service', "family-request", "other", "None"],
+        enum: INACTIVE_STATUS_REASONS,
         default: "None"
     },
     statusNotes: {
@@ -50,7 +54,7 @@ const CarePlanSchema = new mongoose.Schema({
     mimeType: { type: String, required: true },
     uploadedAt: { type: Date, default: Date.now }
 },
-    { _id: false }); //sub docs don't need their own id 
+    { _id: false }); //sub docs don't need their own id
 
 
 //--------------main Schema: the full client record---------------
@@ -61,16 +65,19 @@ const ClientSchema = new mongoose.Schema({
         unique: true, //verification2: unique client code
         trim: true, //auto removes spaces
     },
+
     fullName: {
         type: String,
         required: [true, "Full name is mandatory"],
         trim: true,
     },
+
     gender: {
         type: String,
         enum: ["Female", "Male", "Other"],
         required: true,
     },
+
     age: {
         type: Number,
         required: true,
@@ -78,19 +85,25 @@ const ClientSchema = new mongoose.Schema({
         max: [120, "Age cannot exceed 120"],
         //Mongoose validates before saving, no need to check manually in routes
     },
-    birthDate: {
-    type: String,
-    required: [true, "Birth date is required"],
-    validate: {
-        validator(value) {
-        return (
-            typeof value === "string" &&
-            !Number.isNaN(Date.parse(value)) &&
-            value === new Date(value).toISOString()
-        );
+    birthDate: { //"2006-07-07"
+        type: String,
+        required: [true, "Birth date is required"],
+        validate: {
+            validator(value) {
+                console.log("###### THIS IS THE REAL FILE ######", typeof value, value);
+                console.log("VALIDATOR RUNNING, value =", value);
+                return (
+                    
+                    //typeof value === "string" &&
+                    //!Number.isNaN(Date.parse(value)) &&
+                    //value === new Date(value).toISOString()
+                    typeof value === "string" &&
+                    /^\d{4}-\d{2}-\d{2}$/.test(value) &&
+                    !Number.isNaN(Date.parse(value))
+                );
+            },
+            message: "Birth date must be a valid ISO 8601 date",
         },
-        message: "Birth date must be a valid ISO 8601 date",
-    },
     },
     preferredCaregiverGender: {
         type: String,
@@ -99,14 +112,17 @@ const ClientSchema = new mongoose.Schema({
     },
     mobilityStatus: {
         type: String,
-        enum: ["Independent", "Assisted", "Hoisted", "Wheelchair-bound", "Bedridden", "Other"],
+        //enum: ["Independent", "Assisted", "Hoisted", "Wheelchair-bound", "Bedridden", "Other"],
+        enum: MOBILITY_STATUSES,
         default: "Independent",
     },
     cognitiveStatus: {
         type: String,
-        enum: ["Normal", "Mild Cognitive Impairment", "Dementia", "Other"],
+        //enum: ["Normal", "Mild Cognitive Impairment", "Dementia", "Other"],
+        enum: COGNITIVE_STATUSES,
         default: "Normal",
     },
+
     address: {
         addressLine: { type: String, required: true },
         town: { type: String },
@@ -116,37 +132,43 @@ const ClientSchema = new mongoose.Schema({
         latitude: { type: Number, required: true },
         longitude: { type: Number, required: true },
     },
+
     phoneNumber: {
         type: String,
         required: true,
         trim: true,
         validate: {
-            validator: function (v) {
+            validator: function(v) {
                 return /^\+?[0-9]{7,15}$/.test(v);
             },
             message: "Invalid phone number",
         },
     },
+
     hasPets: {
         type: Boolean,
         default: false,
     }, //for matching with caregiver pet allergy
+
     careNeeds: [String], //array of strings, one client can have multiple care needs
     emergencyContact: emergencyContactSchema,
+    //care notes
     notes: {
         type: String,
         trim: true,
         default: "",
     },
+
     status: {
         type: String,
-        enum: ["active", "inactive", "deceased", "other"],
+        //enum: ["active", "inactive", "deceased", "other"],
+        enum: CLIENT_STATUSES, //use the imported list of valid client statuses
         default: "active",
     },
     statusDetails: statusDetailsSchema,
-    carePlan: CarePlanSchema, //embedded sub-document for care plan file info
+    carePlan: CarePlanSchema, //embedded sub-document for care plan file details
     },
-    { timestamps: true }, //create and modify time automatically, createdAt & updatedAt
+  { timestamps: true }, //create and modify time automatically, createdAt & updatedAt
 );
 
 

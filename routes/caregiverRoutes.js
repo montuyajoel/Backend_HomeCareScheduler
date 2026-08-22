@@ -1,7 +1,7 @@
 // route definitions
 const express = require("express");
 const router = express.Router();
-const { protect, adminOnly } = require("../middleware/authMiddleware");
+const { protect, adminOnly } = require("../middleware/authMiddleware.js");
 const { createCaregiver, getAllCaregivers, getByCareGiverID, updateCaregiver, deleteCaregiver, computeTravel } = require("../controllers/caregiverController.js");
 
 //route only defines endpoint
