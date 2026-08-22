@@ -1,6 +1,8 @@
 const mongoose = require("mongoose");
 const { sanitizeMongoUri } = require("./sanitizeMongoUri");
 
+mongoose.set("bufferCommands", false);
+
 let cached = global.mongoose;
 
 if (!cached) {
@@ -8,7 +10,7 @@ if (!cached) {
 }
 
 async function connectDB() {
-    if (cached.conn) {
+    if (cached.conn && mongoose.connection.readyState === 1) {
         return cached.conn;
     }
 
@@ -17,10 +19,20 @@ async function connectDB() {
     }
 
     if (!cached.promise) {
-        cached.promise = mongoose.connect(process.env.MONGO_URI).then((mongooseInstance) => {
-            console.log("? Connected to MongoDB:", sanitizeMongoUri(process.env.MONGO_URI));
-            return mongooseInstance;
-        });
+        cached.promise = mongoose
+            .connect(process.env.MONGO_URI, {
+                serverSelectionTimeoutMS: 8000,
+                maxPoolSize: 10,
+            })
+            .then((mongooseInstance) => {
+                console.log("Connected to MongoDB:", sanitizeMongoUri(process.env.MONGO_URI));
+                return mongooseInstance;
+            })
+            .catch((error) => {
+                cached.promise = null;
+                cached.conn = null;
+                throw error;
+            });
     }
 
     cached.conn = await cached.promise;

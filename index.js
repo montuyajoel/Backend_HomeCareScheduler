@@ -42,6 +42,15 @@ app.get("/", (req, res) => {
   res.send("<h1>HomeCare Scheduler API</h1><p>Status: Online</p>");
 });
 
+// DB health check — use after deploy to confirm Atlas is reachable from Vercel
+app.get("/api/health/db", ensureDb, (req, res) => {
+  res.json({
+    success: true,
+    message: "MongoDB connected",
+    readyState: require("mongoose").connection.readyState,
+  });
+});
+
 // All API routes require a live MongoDB connection (important on Vercel serverless)
 app.use("/api", ensureDb);
 
