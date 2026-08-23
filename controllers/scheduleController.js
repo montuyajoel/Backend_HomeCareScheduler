@@ -1,222 +1,272 @@
 //controllers/scheduleController.js
-/*This file handles all schedule-related operations:
-assigning a client to a caregiver, caregiver views one's own schedule, admin views a specific caregiver's schedules (admin view), and
-updating an existing schedule record. Every update writes an audit log entry via AuditLog. */
 const schedule = require("../models/Schedule");
-const client= require("../models/Client");
+const client = require("../models/Client");
 const caregiver = require("../models/Caregiver");
 const auditLog = require("../models/AuditLog");
 const user = require("../models/User");
+const { ObjectId } = require("mongodb");
+const { getStartOfDay, getEndOfDay } = require("../utils/irelandTime");
+const {
+    validateAssignment,
+    evaluateCaregiversForSlot,
+    validateBatchInternal,
+    validateAssignmentBatch,
+    evaluateCaregiversForBatch,
+    normalizeSlots,
+} = require("../services/scheduleValidationService");
 
-const { ObjectId } = require('mongodb');
+const { assignScheduleToCaregiver } = require("./assignScheduleToCaregiverController.js");
 
-
-
-//------------------assign Schedule To Caregiver---------------
-const { assignScheduleToCaregiver }
-= require("./assignScheduleToCaregiverController.js");
-
-/*
-//！！！！！！！！！！！！！这里的排班没有任何筛选！！！！！最重要的功能
-//Assigns a client to a caregiver by creating a new schedule record.
-const assignScheduleToCaregiver = async (req, res) => {
-    try {
-        console.log(`-----------assign Schedule To Caregiver---------`);
-        const { clientCode, employeeCode, date, startTime, endTime } = req.body;
-
-        const findClient = await client.findOne({clientCode:clientCode})
-        const findCaregiver = await caregiver.findOne({employeeCode:employeeCode})
-
-        //------------------All Checks----------------
-        if(!findClient) {
-            console.log(`Assign schedule failed: client ${clientCode} does not exist.`);
-            res.status(404).json({
-                success:false,
-                message:`Client ${clientCode} not found.`
-            })
-        }
-        else if(findClient.status !== "active") {
-            console.log(`Assign schedule failed:
-                client ${clientCode} (${findClient.fullName}) has status "${findClient.status}",
-                not active.`);
-
-            res.status(400).json({
-                success: false,
-                message: `Client ${clientCode} (${findClient.fullName}) is not active (current status: "${findClient.status}").`
-            })
-        }
-
-        if(!findCaregiver) {
-            console.log(`Assign schedule failed: caregiver ${employeeCode} does not exist.`);
-            res.status(404).json({
-                success: false,
-                message: `Caregiver ${employeeCode} not found.`
-            })
-        }
-        else if (findCaregiver.status !== "active") {
-            console.log(`Assign schedule failed: caregiver ${employeeCode} (${findCaregiver.fullName}) has status "${findCaregiver.status}", not active.`);
-            res.status(400).json({
-                success: false,
-                message: `Caregiver ${employeeCode} (${findCaregiver.fullName}) is not active (current status: "${findCaregiver.status}").`
-            })
-        }
-        //------After all checks pass, creating the new schedule--------
-        //store the client's and caregiver's MongoDB _id references
-        const newSchedule = new schedule({
-            client: findClient._id,
-            caregiver: findCaregiver._id,
-            date,
-            startTime,
-            endTime
-        });
-
-        const savedSchedule = await newSchedule.save();
-
-        console.log(`--------Schedule assigned successfully!--------`);
-        console.log(`Client: ${findClient.clientCode} (${findClient.fullName})`);
-        console.log(`Caregiver: ${findCaregiver.employeeCode} (${findCaregiver.fullName})`);
-        console.log(`Date: ${date}, Time: ${startTime} - ${endTime}`);
-
-        //---------------------------------
-        /*res.status(201).json({
-            success: true,
-            message: "Schedule assigned successfully.", data: savedSchedule
-        })；
-        
-        return res.status(201).json({
-            success: true,
-            message: "Schedule assigned successfully.",
-            data: {
-                scheduleId: savedSchedule._id,
-                clientCode: findClient.clientCode,
-                clientName: findClient.fullName,
-                caregiverEmployeeCode: findCaregiver.employeeCode,
-                caregiverName: findCaregiver.fullName,
-                date: savedSchedule.date,
-                startTime: savedSchedule.startTime,
-                endTime: savedSchedule.endTime
-            }
-        });
-
-        //-----------------------
-    } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
-    }
-} */
-
-
-//------------Caregiver view their own  Schedules-------------------
-//A caregiver views their own schedules, resolves the logged in
-//user's id to their caregiver profile, then queries schedules for that caregiver.
+const formatScheduleEntry = (doc) => ({
+    scheduleId: doc._id,
+    date: doc.date,
+    startTime: doc.startTime,
+    endTime: doc.endTime,
+    status: doc.status,
+    notes: doc.notes,
+    client: doc.client
+        ? {
+              clientCode: doc.client.clientCode,
+              fullName: doc.client.fullName,
+          }
+        : null,
+    caregiver: doc.caregiver
+        ? {
+              employeeCode: doc.caregiver.employeeCode,
+              fullName: doc.caregiver.fullName,
+          }
+        : null,
+});
 
 const getMySchedules = async (req, res) => {
     try {
-
         console.log(`---------getMySchedules: Caregiver view their own  Schedules--------------`);
-        const userId = req.user.id; // the logged-in user's ID is stored in req.user.id, from the JWT
+        const userId = req.user.id;
 
-        //the User document only stores the caregiverId foreign key,
-        //so populate() is needed to resolve the full Caregiver profile
-        const findCaregiver = await user.findOne({ _id: new ObjectId(userId) }).populate('caregiverId');
-        if(!findCaregiver){
+        const findCaregiver = await user.findOne({ _id: new ObjectId(userId) }).populate("caregiverId");
+        if (!findCaregiver) {
             console.log(`getMySchedules failed: no caregiver profile linked to userId ${userId}.`);
             return res.status(404).json({
                 success: false,
-                message: `Caregiver not found for the authenticated user.`
+                message: `Caregiver not found for the authenticated user.`,
             });
         }
 
-        const schedules = await schedule.find({ caregiver: findCaregiver.caregiverId })
-            .populate('client', 'name clientCode') // Populate client details (name and clientCode)
-            .sort({ date: 1, startTime: 1 }); // Sort ascending by date and start time
+        const schedules = await schedule
+            .find({ caregiver: findCaregiver.caregiverId })
+            .populate("client", "fullName clientCode")
+            .sort({ date: 1, startTime: 1 });
 
         if (!schedules || schedules.length === 0) {
-
             console.log(`No schedules found for caregiver userId ${userId}.`);
             return res.status(404).json({
                 success: false,
-                message: `No schedules found for the caregiver.`
+                message: `No schedules found for the caregiver.`,
             });
         }
 
         console.log(`Fetched ${schedules.length} schedule(s) for caregiver userId ${userId}.`);
-        
-        res.status(200).json({
-            success: true, count: schedules.length, data: schedules
-        });
 
+        res.status(200).json({
+            success: true,
+            count: schedules.length,
+            data: schedules,
+        });
     } catch (error) {
         console.error("Error fetching schedules:", error);
         res.status(500).json({
             success: false,
-            message: "An error occurred while fetching schedules."
+            message: "An error occurred while fetching schedules.",
         });
     }
-}
+};
 
-
-//-----------------getSchedulesForCaregiver: get schedules for a specific caregiver by their ID----------------------------
-//An admin looks up all schedules for a specific caregiver by employeeCode.
 const getSchedulesForCaregiver = async (req, res) => {
     try {
-        //const caregiverId = req.params.caregiverId; // Get caregiver ID from request parameters
         const employeeCode = req.params.employeeCode;
         const { date } = req.query;
-        
-        const caregiverExists = await caregiver.findOne({employeeCode: employeeCode});
-        if(!caregiverExists){
-            //return res.status(404).json({ success: false, message: "Caregiver not found." });
+
+        const caregiverExists = await caregiver.findOne({ employeeCode: employeeCode });
+        if (!caregiverExists) {
             console.log(`getSchedulesForCaregiver failed: caregiver ${employeeCode} does not exist.`);
-            return res.status(404).json({ success: false,
-                message: `Caregiver ${employeeCode} not found.` });
+            return res.status(404).json({ success: false, message: `Caregiver ${employeeCode} not found.` });
         }
 
-        const schedules = await schedule.find({ caregiver: caregiverExists._id })
-            .populate('client', 'name clientCode') // Populate client details (name and clientCode)
-            .sort({ date: 1, startTime: 1 }); // Sort by date and start time
-        
+        const query = { caregiver: caregiverExists._id };
+        if (date) {
+            query.date = { $gte: getStartOfDay(date), $lte: getEndOfDay(date) };
+        }
+
+        const schedules = await schedule
+            .find(query)
+            .populate("client", "fullName clientCode")
+            .sort({ date: 1, startTime: 1 });
+
         if (schedules.length === 0) {
             console.log(`No schedules found for caregiver ${employeeCode} (${caregiverExists.fullName}).`);
             return res.status(404).json({
                 success: false,
-                message: `No schedules found for caregiver ${employeeCode} (${caregiverExists.fullName}).`});
+                message: `No schedules found for caregiver ${employeeCode} (${caregiverExists.fullName}).`,
+            });
         }
 
         console.log(`Fetched ${schedules.length} schedule(s) for caregiver ${employeeCode} (${caregiverExists.fullName}).`);
-        
-        //res.status(200).json({ success: true, data: schedules });
+
         return res.status(200).json({
             success: true,
             caregiverEmployeeCode: caregiverExists.employeeCode,
             caregiverName: caregiverExists.fullName,
             count: schedules.length,
-            data: schedules
+            data: schedules,
         });
-
     } catch (error) {
         console.error("Error fetching schedules for caregiver:", error);
-        res.status(500).json({ success: false,
+        res.status(500).json({
+            success: false,
             message: "An error occurred while fetching schedules for the caregiver.",
-            "error_details": error.message
+            error_details: error.message,
         });
     }
-}
+};
 
-//-----------------updateSchedule----------------------------
-//Updates an existing schedule record (date, time, caregiver, status).
-//If nothing actually changed， Rejects the update; writes an audit log entry on success.
+const getSchedulesByDate = async (req, res) => {
+    try {
+        const { date, start, end } = req.query;
+
+        let dateFilter;
+        if (date) {
+            dateFilter = { $gte: getStartOfDay(date), $lte: getEndOfDay(date) };
+        } else if (start && end) {
+            dateFilter = { $gte: getStartOfDay(start), $lte: getEndOfDay(end) };
+        } else {
+            return res.status(400).json({
+                success: false,
+                message: "Provide ?date=YYYY-MM-DD or ?start=YYYY-MM-DD&end=YYYY-MM-DD",
+            });
+        }
+
+        const schedules = await schedule
+            .find({ date: dateFilter, status: { $ne: "cancelled" } })
+            .populate("client", "fullName clientCode careNeeds status")
+            .populate("caregiver", "fullName employeeCode status")
+            .sort({ date: 1, startTime: 1 });
+
+        return res.status(200).json({
+            success: true,
+            count: schedules.length,
+            data: schedules.map(formatScheduleEntry),
+        });
+    } catch (error) {
+        console.error("Error fetching schedules by date:", error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+const getAvailableCaregivers = async (req, res) => {
+    try {
+        const { clientCode, date, startTime, endTime } = req.query;
+
+        if (!clientCode || !date || !startTime || !endTime) {
+            return res.status(400).json({
+                success: false,
+                message: "Required query params: clientCode, date, startTime, endTime",
+            });
+        }
+
+        const findClient = await client.findOne({ clientCode });
+        if (!findClient) {
+            return res.status(404).json({ success: false, message: `Client ${clientCode} not found.` });
+        }
+
+        const normalizedDate = getStartOfDay(date);
+        const allCaregivers = await caregiver.find({ status: "active" });
+
+        const { eligible, ineligible } = await evaluateCaregiversForSlot({
+            clientDoc: findClient,
+            caregivers: allCaregivers,
+            date: normalizedDate,
+            startTime,
+            endTime,
+        });
+
+        return res.status(200).json({
+            success: true,
+            client: {
+                clientCode: findClient.clientCode,
+                fullName: findClient.fullName,
+                careNeeds: findClient.careNeeds,
+                preferredCaregiverGender: findClient.preferredCaregiverGender,
+                hasPets: findClient.hasPets,
+                status: findClient.status,
+            },
+            slot: { date: normalizedDate, startTime, endTime },
+            eligible,
+            ineligible,
+            eligibleCount: eligible.length,
+            ineligibleCount: ineligible.length,
+        });
+    } catch (error) {
+        console.error("Error fetching available caregivers:", error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+const validateScheduleAssignment = async (req, res) => {
+    try {
+        const { clientCode, employeeCode, date, startTime, endTime } = req.body;
+
+        const findClient = await client.findOne({ clientCode });
+        const findCaregiver = await caregiver.findOne({ employeeCode });
+
+        if (!findClient) {
+            return res.status(404).json({ success: false, rule: 1, message: `Client ${clientCode} not found.` });
+        }
+        if (!findCaregiver) {
+            return res.status(404).json({ success: false, rule: 3, message: `Caregiver ${employeeCode} not found.` });
+        }
+
+        const normalizedDate = getStartOfDay(date);
+        const validation = await validateAssignment({
+            clientDoc: findClient,
+            caregiverDoc: findCaregiver,
+            date: normalizedDate,
+            startTime,
+            endTime,
+        });
+
+        if (!validation.valid) {
+            return res.status(400).json({
+                success: false,
+                valid: false,
+                rule: validation.rule,
+                message: validation.message,
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            valid: true,
+            message: "Assignment is valid.",
+        });
+    } catch (error) {
+        console.error("Error validating assignment:", error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
 const updateSchedule = async (req, res) => {
     try {
         console.log(`-----------Update a schedule----------------`);
         const { scheduleId } = req.params;
-        const { date, startTime, endTime, caregiver, status } = req.body;
-        
+        const { date, startTime, endTime, caregiver: caregiverId, employeeCode, status, notes } = req.body;
+
         const findSchedule = await schedule.findById(scheduleId);
         if (!findSchedule) {
             console.log(`updateSchedule failed: schedule ${scheduleId} does not exist.`);
             return res.status(404).json({
                 success: false,
-                message: `schedule ${scheduleId} does not exist.` });
+                message: `schedule ${scheduleId} does not exist.`,
+            });
         }
 
         const clientExists = await client.findById(findSchedule.client);
@@ -224,17 +274,31 @@ const updateSchedule = async (req, res) => {
             console.log(`updateSchedule failed: client linked to schedule ${scheduleId} no longer exists.`);
             return res.status(404).json({
                 success: false,
-                message: `client linked to schedule ${scheduleId} not found.` });
+                message: `client linked to schedule ${scheduleId} not found.`,
+            });
         }
-        
-        //If a field isn't provided in the request, keep the existing value
-        //(?? means "use the right-hand value only if the left-hand one is null/undefined")
+
+        let resolvedCaregiverId = caregiverId ?? findSchedule.caregiver;
+        if (employeeCode) {
+            const cg = await caregiver.findOne({ employeeCode });
+            if (!cg) {
+                return res.status(404).json({ success: false, message: `Caregiver ${employeeCode} not found.` });
+            }
+            resolvedCaregiverId = cg._id;
+        }
+
+        const caregiverDoc = await caregiver.findById(resolvedCaregiverId);
+        if (!caregiverDoc) {
+            return res.status(404).json({ success: false, message: "Caregiver not found." });
+        }
+
         const update = {
-            date: date ?? findSchedule.date,
+            date: date ? getStartOfDay(date) : findSchedule.date,
             startTime: startTime ?? findSchedule.startTime,
             endTime: endTime ?? findSchedule.endTime,
-            caregiver: caregiver ?? findSchedule.caregiver,
-            status: status ?? findSchedule.status
+            caregiver: resolvedCaregiverId,
+            status: status ?? findSchedule.status,
+            notes: notes !== undefined ? notes : findSchedule.notes,
         };
 
         const current = {
@@ -242,44 +306,63 @@ const updateSchedule = async (req, res) => {
             startTime: findSchedule.startTime,
             endTime: findSchedule.endTime,
             caregiver: findSchedule.caregiver?.toString(),
-            status: findSchedule.status
+            status: findSchedule.status,
+            notes: findSchedule.notes,
         };
-        //Convert the old vs new to strings, compare those two strings. If identical, this request
-        //didn't change anything, so reject it early to avoid a no-op audit entry.
-        if (JSON.stringify(current) === JSON.stringify(update)) {
-            console.log(`updateSchedule: no changes detected for schedule ${scheduleId}.`);
+
+        const validation = await validateAssignment({
+            clientDoc: clientExists,
+            caregiverDoc,
+            date: update.date,
+            startTime: update.startTime,
+            endTime: update.endTime,
+            excludeScheduleId: findSchedule._id,
+        });
+
+        if (!validation.valid && update.status !== "cancelled") {
             return res.status(400).json({
                 success: false,
-                message: `no changes detected for schedule ${scheduleId}.`
+                rule: validation.rule,
+                message: validation.message,
             });
         }
 
-        const updatedSchedule = await schedule.findByIdAndUpdate(
-            scheduleId,
-            { date, startTime, endTime, caregiver, status },
-            { new: true }
-        );
-        if (!updatedSchedule) {
-            return res.status(404).json({
-                success: false, message: `Schedule not found.` });
+        const newSnapshot = {
+            date: update.date?.toISOString?.() ?? update.date,
+            startTime: update.startTime,
+            endTime: update.endTime,
+            caregiver: update.caregiver?.toString(),
+            status: update.status,
+            notes: update.notes,
+        };
+
+        if (JSON.stringify(current) === JSON.stringify(newSnapshot)) {
+            console.log(`updateSchedule: no changes detected for schedule ${scheduleId}.`);
+            return res.status(400).json({
+                success: false,
+                message: `no changes detected for schedule ${scheduleId}.`,
+            });
         }
 
-        //"await". Without it, the response could be sent
-        //before this audit log entry actually finishes writing to the database
+        const updatedSchedule = await schedule.findByIdAndUpdate(scheduleId, update, { new: true });
+        if (!updatedSchedule) {
+            return res.status(404).json({
+                success: false,
+                message: `Schedule not found.`,
+            });
+        }
+
         await auditLog.create({
-            actionType: 'schedule_update',
-            oldValue: findSchedule, // You can store the old value if needed
-            newValue: { date, startTime, endTime, caregiver, status },
+            actionType: "schedule_update",
+            oldValue: findSchedule,
+            newValue: update,
             clientCode: clientExists.clientCode,
-            adminUser: req.user.id, //the logged-in user's ID is stored in req.user.id, from the JWT
+            adminUser: req.user.id,
         });
 
         console.log(`--------Schedule updated successfully!--------`);
         console.log(`Schedule ID: ${scheduleId}, Client: ${clientExists.clientCode} (${clientExists.fullName})`);
-        console.log(`Before: ${JSON.stringify(current)}`);
-        console.log(`After:  ${JSON.stringify(update)}`);
 
-        //res.status(200).json({ success: true, data: updatedSchedule });
         return res.status(200).json({
             success: true,
             message: "Schedule updated successfully.",
@@ -287,23 +370,335 @@ const updateSchedule = async (req, res) => {
                 scheduleId: updatedSchedule._id,
                 clientCode: clientExists.clientCode,
                 clientName: clientExists.fullName,
+                caregiverEmployeeCode: caregiverDoc.employeeCode,
+                caregiverName: caregiverDoc.fullName,
                 before: current,
-                after: update
-            }
+                after: newSnapshot,
+            },
         });
     } catch (error) {
         console.error("Error updating schedule:", error);
         res.status(500).json({
             success: false,
             message: `An error occurred while updating the schedule.`,
-            "error_details": error.message
+            error_details: error.message,
         });
     }
-}
+};
+
+const cancelSchedule = async (req, res) => {
+    try {
+        const { scheduleId } = req.params;
+        const findSchedule = await schedule.findById(scheduleId);
+        if (!findSchedule) {
+            return res.status(404).json({ success: false, message: "Schedule not found." });
+        }
+
+        if (findSchedule.status === "cancelled") {
+            return res.status(400).json({ success: false, message: "Schedule is already cancelled." });
+        }
+
+        const clientExists = await client.findById(findSchedule.client);
+        const updated = await schedule.findByIdAndUpdate(
+            scheduleId,
+            { status: "cancelled" },
+            { new: true }
+        );
+
+        await auditLog.create({
+            actionType: "schedule_update",
+            oldValue: findSchedule,
+            newValue: { status: "cancelled" },
+            clientCode: clientExists?.clientCode,
+            adminUser: req.user.id,
+        });
+
+        return res.status(200).json({
+            success: true,
+            message: "Schedule cancelled successfully.",
+            data: { scheduleId: updated._id, status: updated.status },
+        });
+    } catch (error) {
+        console.error("Error cancelling schedule:", error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+const reassignSchedule = async (req, res) => {
+    try {
+        const { scheduleId } = req.params;
+        const { employeeCode } = req.body;
+
+        if (!employeeCode) {
+            return res.status(400).json({ success: false, message: "employeeCode is required." });
+        }
+
+        const findSchedule = await schedule.findById(scheduleId);
+        if (!findSchedule) {
+            return res.status(404).json({ success: false, message: "Schedule not found." });
+        }
+
+        if (findSchedule.status === "cancelled") {
+            return res.status(400).json({ success: false, message: "Cannot reassign a cancelled schedule." });
+        }
+
+        const clientExists = await client.findById(findSchedule.client);
+        if (!clientExists) {
+            return res.status(404).json({ success: false, message: "Client linked to schedule not found." });
+        }
+
+        const newCaregiver = await caregiver.findOne({ employeeCode });
+        if (!newCaregiver) {
+            return res.status(404).json({ success: false, message: `Caregiver ${employeeCode} not found.` });
+        }
+
+        const validation = await validateAssignment({
+            clientDoc: clientExists,
+            caregiverDoc: newCaregiver,
+            date: findSchedule.date,
+            startTime: findSchedule.startTime,
+            endTime: findSchedule.endTime,
+            excludeScheduleId: findSchedule._id,
+        });
+
+        if (!validation.valid) {
+            return res.status(400).json({
+                success: false,
+                rule: validation.rule,
+                message: validation.message,
+            });
+        }
+
+        const oldCaregiver = await caregiver.findById(findSchedule.caregiver);
+        const updated = await schedule.findByIdAndUpdate(
+            scheduleId,
+            { caregiver: newCaregiver._id, status: "scheduled" },
+            { new: true }
+        );
+
+        await auditLog.create({
+            actionType: "schedule_update",
+            oldValue: { caregiver: oldCaregiver?.employeeCode },
+            newValue: { caregiver: newCaregiver.employeeCode },
+            clientCode: clientExists.clientCode,
+            adminUser: req.user.id,
+        });
+
+        return res.status(200).json({
+            success: true,
+            message: "Schedule reassigned successfully.",
+            data: {
+                scheduleId: updated._id,
+                clientCode: clientExists.clientCode,
+                clientName: clientExists.fullName,
+                caregiverEmployeeCode: newCaregiver.employeeCode,
+                caregiverName: newCaregiver.fullName,
+            },
+        });
+    } catch (error) {
+        console.error("Error reassigning schedule:", error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+const getAvailableCaregiversBatch = async (req, res) => {
+    try {
+        const { clientCode, slots } = req.body;
+
+        if (!clientCode || !Array.isArray(slots) || slots.length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: "Required body: clientCode and slots array.",
+            });
+        }
+
+        const findClient = await client.findOne({ clientCode });
+        if (!findClient) {
+            return res.status(404).json({ success: false, message: `Client ${clientCode} not found.` });
+        }
+
+        const normalized = normalizeSlots(slots);
+        const internal = validateBatchInternal(normalized);
+        if (!internal.valid) {
+            return res.status(400).json({ success: false, message: internal.message });
+        }
+
+        const allCaregivers = await caregiver.find({ status: "active" });
+        const { eligible, ineligible, batchError } = await evaluateCaregiversForBatch({
+            clientDoc: findClient,
+            caregivers: allCaregivers,
+            slots: normalized,
+        });
+
+        if (batchError) {
+            return res.status(400).json({ success: false, message: batchError });
+        }
+
+        return res.status(200).json({
+            success: true,
+            client: {
+                clientCode: findClient.clientCode,
+                fullName: findClient.fullName,
+                careNeeds: findClient.careNeeds,
+                preferredCaregiverGender: findClient.preferredCaregiverGender,
+                hasPets: findClient.hasPets,
+                status: findClient.status,
+            },
+            slotCount: normalized.length,
+            slots: normalized,
+            eligible,
+            ineligible,
+            eligibleCount: eligible.length,
+            ineligibleCount: ineligible.length,
+        });
+    } catch (error) {
+        console.error("Error fetching available caregivers batch:", error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+const validateScheduleAssignmentBatch = async (req, res) => {
+    try {
+        const { clientCode, employeeCode, slots } = req.body;
+
+        const findClient = await client.findOne({ clientCode });
+        const findCaregiver = await caregiver.findOne({ employeeCode });
+
+        if (!findClient) {
+            return res.status(404).json({ success: false, rule: 1, message: `Client ${clientCode} not found.` });
+        }
+        if (!findCaregiver) {
+            return res.status(404).json({ success: false, rule: 3, message: `Caregiver ${employeeCode} not found.` });
+        }
+
+        const batchResult = await validateAssignmentBatch({
+            clientDoc: findClient,
+            caregiverDoc: findCaregiver,
+            slots,
+        });
+
+        if (!batchResult.valid) {
+            return res.status(400).json({
+                success: false,
+                valid: false,
+                rule: batchResult.rule,
+                message: batchResult.message,
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            valid: true,
+            message: "All slots are valid for this assignment.",
+            slotCount: batchResult.slots.length,
+        });
+    } catch (error) {
+        console.error("Error validating batch assignment:", error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+const assignScheduleBatch = async (req, res) => {
+    try {
+        const { clientCode, employeeCode, slots, notes } = req.body;
+
+        if (!clientCode || !employeeCode || !Array.isArray(slots) || slots.length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: "Required body: clientCode, employeeCode, and slots array.",
+            });
+        }
+
+        const findClient = await client.findOne({ clientCode });
+        const findCaregiver = await caregiver.findOne({ employeeCode });
+
+        if (!findClient) {
+            return res.status(404).json({ success: false, rule: 1, message: `Client ${clientCode} not found.` });
+        }
+        if (!findCaregiver) {
+            return res.status(404).json({ success: false, rule: 3, message: `Caregiver ${employeeCode} not found.` });
+        }
+
+        const batchResult = await validateAssignmentBatch({
+            clientDoc: findClient,
+            caregiverDoc: findCaregiver,
+            slots,
+        });
+
+        if (!batchResult.valid) {
+            return res.status(400).json({
+                success: false,
+                rule: batchResult.rule,
+                message: batchResult.message,
+            });
+        }
+
+        const results = [];
+
+        for (const slot of batchResult.slots) {
+            const normalizedDate = getStartOfDay(slot.date);
+            const newSchedule = new schedule({
+                client: findClient._id,
+                caregiver: findCaregiver._id,
+                date: normalizedDate,
+                startTime: slot.startTime,
+                endTime: slot.endTime,
+                notes: notes || undefined,
+                createdBy: req.user.id,
+            });
+
+            const saved = await newSchedule.save();
+            results.push({
+                date: normalizedDate,
+                startTime: slot.startTime,
+                endTime: slot.endTime,
+                scheduleId: saved._id,
+                status: "created",
+            });
+        }
+
+        await auditLog.create({
+            actionType: "schedule_update",
+            oldValue: null,
+            newValue: {
+                clientCode,
+                employeeCode,
+                slotCount: batchResult.slots.length,
+                slots: batchResult.slots,
+                notes,
+            },
+            clientCode: findClient.clientCode,
+            adminUser: req.user.id,
+        });
+
+        return res.status(201).json({
+            success: true,
+            message: `${results.length} schedule(s) assigned successfully.`,
+            created: results.length,
+            failed: 0,
+            clientCode: findClient.clientCode,
+            clientName: findClient.fullName,
+            caregiverEmployeeCode: findCaregiver.employeeCode,
+            caregiverName: findCaregiver.fullName,
+            results,
+        });
+    } catch (error) {
+        console.error("Error assigning schedule batch:", error);
+        return res.status(500).json({ success: false, message: error.message });
+    }
+};
 
 module.exports = {
     assignScheduleToCaregiver,
     getMySchedules,
     getSchedulesForCaregiver,
-    updateSchedule
+    getSchedulesByDate,
+    getAvailableCaregivers,
+    validateScheduleAssignment,
+    updateSchedule,
+    cancelSchedule,
+    reassignSchedule,
+    getAvailableCaregiversBatch,
+    validateScheduleAssignmentBatch,
+    assignScheduleBatch,
 };
