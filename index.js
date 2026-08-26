@@ -14,6 +14,10 @@ const supaBase = require("./utils/filestorageHelper");
 const scheduleRoutes = require("./routes/scheduleRoutes");
 const leaveRequestRoutes = require("./routes/leaveRequestRoutes");
 const visitLogRoutes = require("./routes/visitLogRoutes");
+const uhieChatRoutes = require("./routes/uhieChatRoutes");
+const {
+  checkUhieConnection,
+} = require("./services/uhieFoundryService");
 const ensureDb = require("./middleware/ensureDb");
 const connectDB = require("./utils/connectDB");
 
@@ -52,6 +56,9 @@ app.get("/api/health/db", ensureDb, (req, res) => {
   });
 });
 
+// Uhie chat (Foundry) — health does not need DB; mount before ensureDb
+app.use("/api/uhie", uhieChatRoutes);
+
 // All API routes require a live MongoDB connection (important on Vercel serverless)
 app.use("/api", ensureDb);
 
@@ -68,10 +75,12 @@ app.post("/api/hse-import", (req, res) => {
   res.json({ success: true, message: "HSE import endpoint ready" });
 });
 
-// Check Supabase Connection (local dev only; non-blocking)
+// Supabase probe: local dev only. Uhie probe: local + Vercel cold start (non-blocking).
 if (!process.env.VERCEL) {
   supaBase.checkSupabaseConnection();
 }
+checkUhieConnection();
+
 
 // Local dev: start listening server
 if (require.main === module) {

@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Incident Report Guide - HomeCare Scheduler</title>
+  <style>
+    body { font-family: Georgia, serif; max-width: 820px; margin: 2rem auto; padding: 0 1.5rem; color: #222; line-height: 1.55; }
+    header { border-bottom: 3px solid #28466e; padding-bottom: 1rem; margin-bottom: 2rem; }
+    h1 { color: #142846; margin-bottom: 0.25rem; }
+    .meta { color: #666; font-size: 0.9rem; }
+    h2 { color: #28466e; margin-top: 2rem; border-bottom: 1px solid #ccc; padding-bottom: 0.3rem; }
+    h3 { color: #444; }
+    table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.95rem; }
+    th, td { border: 1px solid #bbb; padding: 0.55rem 0.65rem; text-align: left; vertical-align: top; }
+    th { background: #eef3f8; }
+    tr:nth-child(even) { background: #fafbfc; }
+    .note { background: #eef3f8; border-left: 4px solid #28466e; padding: 1rem; margin: 1.5rem 0; font-style: italic; }
+    img { max-width: 100%; height: auto; display: block; margin: 1.5rem auto; }
+    ol li { margin-bottom: 0.5rem; }
+    .tag { display: inline-block; background: #c85a4a; color: #fff; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.8rem; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Incident Report Guide</h1>
+    <p class="meta">Effective Date: 1 March 2026  |  Version: 2.0  |  Sample RAG Knowledge Base<br>Document ID: CARE-IR-002  |  Category: Care</p>
+  </header>
+
+  <p>All accidents, incidents, near misses, medication errors, safeguarding concerns, and property or data breaches related to care delivery <strong>must be reported</strong>. This guide explains classification, immediate actions, documentation fields, sample narratives, and follow-up within HomeCare Scheduler operations.</p>
+
+  <h2>Response Flow</h2>
+  <img src="../assets/incident_flow.png" alt="Incident response flow diagram" width="700">
+
+  <h2>1. Incident Classification</h2>
+  <table>
+    <tr><th>Category</th><th>Examples</th><th>Reporting Deadline</th><th>Priority</th></tr>
+    <tr><td><span class="tag">Accident</span></td><td>Fall, cut, burn, injury during visit</td><td>Within 24 hours</td><td>High</td></tr>
+    <tr><td><span class="tag">Near miss</span></td><td>Almost fell; wrong dose almost given</td><td>Within 24 hours</td><td>Medium</td></tr>
+    <tr><td><span class="tag">Medication</span></td><td>Missed prompt; discrepancy in blister pack</td><td>Same day</td><td>High</td></tr>
+    <tr><td><span class="tag">Safeguarding</span></td><td>Suspected abuse, neglect, exploitation</td><td>Immediate phone + written</td><td>Critical</td></tr>
+    <tr><td><span class="tag">Equipment</span></td><td>Hoist failure during transfer</td><td>Same day</td><td>High</td></tr>
+    <tr><td><span class="tag">Property / Data</span></td><td>Damage, missing items, data breach</td><td>Within 24 hours</td><td>Medium-High</td></tr>
+  </table>
+
+  <h2>2. Immediate Actions (Strict Order)</h2>
+  <ol>
+    <li><strong>Make safe</strong>  -  protect client and yourself from further harm.</li>
+    <li><strong>Call 112/999</strong> if medical emergency; do not delay for office approval.</li>
+    <li><strong>First aid</strong> only within your training limits.</li>
+    <li><strong>Notify office / on-call supervisor</strong> by phone as soon as practical.</li>
+    <li><strong>Inform family / GP</strong> only as directed by office or care plan.</li>
+    <li><strong>Preserve scene</strong> where investigation may be needed; do not move equipment unnecessarily.</li>
+    <li><strong>Complete written report</strong> within 24 hours (same day preferred).</li>
+  </ol>
+
+  <h2>3. Report Form Fields</h2>
+  <table>
+    <tr><th>Field</th><th>Required</th><th>Guidance</th></tr>
+    <tr><td>Date, time, exact location</td><td>Yes</td><td>Use 24-hour clock; include room if relevant</td></tr>
+    <tr><td>Client ID & caregiver ID</td><td>Yes</td><td>From HomeCare Scheduler profile</td></tr>
+    <tr><td>Incident type (primary)</td><td>Yes</td><td>Select one primary; note secondary in narrative</td></tr>
+    <tr><td>Detailed narrative</td><td>Yes</td><td>Before / during / after; factual, no blame language</td></tr>
+    <tr><td>Injuries & first aid</td><td>Yes</td><td>Describe visible injury; note if 112/999 called</td></tr>
+    <tr><td>Witnesses</td><td>If any</td><td>Name, relationship, contact details</td></tr>
+    <tr><td>Notifications made</td><td>Yes</td><td>Office, GP, ambulance, family  -  with times</td></tr>
+    <tr><td>Equipment involved</td><td>If applicable</td><td>Serial number, condition, quarantine if faulty</td></tr>
+    <tr><td>Photos / attachments</td><td>If policy allows</td><td>Never breach dignity or confidentiality</td></tr>
+    <tr><td>Signature & date</td><td>Yes</td><td>Supervisor follow-up section completed within 2 working days</td></tr>
+  </table>
+
+  <h2>4. Sample Narratives</h2>
+  <h3>Near miss  -  dizziness during transfer</h3>
+  <p>At 14:20 on 12 March 2026, during a sit-to-stand transfer from armchair to zimmer frame, Client Mary S. (ID C-1042) reported sudden dizziness. I supported her to sit back safely. No fall occurred. BP not taken (not authorised). I stayed with client, offered water, phoned office at 14:25. Office contacted daughter. Client remained alert. Visit continued with seated personal care only. Near miss logged; care plan review requested.</p>
+
+  <h3>Medication prompting discrepancy</h3>
+  <p>At 09:05 on 4 April 2026, during AM medication prompt, one tablet remained in Monday AM slot of blister pack though client stated she had not taken morning dose. I did not administer additional dose. I sealed pack, photographed slot per office instruction, and called roster office at 09:08. Supervisor advised to leave pack intact for pharmacist review and document refusal to double-dose. Client well, no adverse effect observed.</p>
+
+  <h2>5. Follow-Up & Learning</h2>
+  <p>Admin or clinical lead reviews within <strong>2 working days</strong>. You may be invited to a debrief. Do not discuss the incident on social media. Anonymous learning points may appear in team briefings. Repeated similar incidents trigger care plan review and additional training.</p>
+
+  <h2>6. Roles & Responsibilities</h2>
+  <table>
+    <tr><th>Role</th><th>Responsibility</th><th>Timeframe</th></tr>
+    <tr><td>Caregiver at scene</td><td>Make safe, first aid, phone office, complete report</td><td>Immediate / 24h</td></tr>
+    <tr><td>On-call supervisor</td><td>Advise actions, notify family/GP if needed, log incident</td><td>Within 1 hour</td></tr>
+    <tr><td>Admin / clinical lead</td><td>Review report, assign investigation, update care plan</td><td>2 working days</td></tr>
+    <tr><td>HR</td><td>Staff injury, disciplinary if breach, return-to-work</td><td>As required</td></tr>
+    <tr><td>Equipment team</td><td>Quarantine faulty hoist/sling, arrange replacement</td><td>Same day if safety critical</td></tr>
+  </table>
+
+  <h2>7. Safeguarding Escalation Pathway</h2>
+  <ol>
+    <li>Ensure immediate safety of client and others.</li>
+    <li>Phone office / on-call supervisor.</li>
+    <li>If immediate danger persists, contact An Garda Siochana (999) or HSE safeguarding.</li>
+    <li>Complete written safeguarding report within 24 hours.</li>
+    <li>Do not contact alleged perpetrator unless instructed by safeguarding lead.</li>
+  </ol>
+
+  <h2>8. Medication Incident Specifics</h2>
+  <table>
+    <tr><th>Error Type</th><th>Immediate Action</th><th>Report Detail</th></tr>
+    <tr><td>Missed prompt</td><td>Do not double dose unless GP/pharmacist advises</td><td>Time missed, reason, office notified</td></tr>
+    <tr><td>Wrong time given</td><td>Stop; phone office/pharmacist line</td><td>Actual vs planned time</td></tr>
+    <tr><td>Client refused</td><td>Record refusal; offer later if plan allows</td><td>Alternative offered</td></tr>
+    <tr><td>Pack discrepancy</td><td>Do not administer extra; seal pack</td><td>Photo if authorised</td></tr>
+  </table>
+
+  <h2>9. FAQ</h2>
+  <h3>Do I report a near miss if nobody was hurt?</h3>
+  <p>Yes. Near misses help prevent future accidents and are required within 24 hours.</p>
+  <h3>What if the client asks me not to tell the office?</h3>
+  <p>You must still report injuries, safeguarding concerns, and medication errors. Explain politely that reporting is mandatory.</p>
+  <h3>Can I complete the report on paper?</h3>
+  <p>Yes if app unavailable; hand to supervisor same day for entry into the system.</p>
+
+  <div class="note">
+    <strong>Urgent safeguarding:</strong> Do not wait for office callback if immediate danger  -  call Gardai / HSE safeguarding as per local pathway, then notify office.<br>
+    Template: operations@homecarescheduler.example
+  </div>
+</body>
+</html>

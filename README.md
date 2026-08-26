@@ -29,6 +29,7 @@ Role-based access:
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
 | GET | `/` | — | Server status page |
+| GET | `/api/health/db` | — | MongoDB connectivity check |
 | POST | `/api/hse-import` | — | HSE data import (placeholder) |
 | POST | `/api/auth/register/send-code` | — | Send registration verification code |
 | POST | `/api/auth/register/verify` | — | Complete registration |
@@ -36,19 +37,18 @@ Role-based access:
 | POST | `/api/auth/recover/send-code` | — | Send account recovery code |
 | POST | `/api/auth/recover/verify` | — | Verify recovery code and receive JWT |
 | GET | `/api/auth/me` | Auth | Get current user |
-| GET | `/api/auth/health` | — | Backend health check |
 | GET | `/api/clients` | Admin | List all clients |
 | GET | `/api/clients/:clientId` | Auth | Get one client |
 | POST | `/api/clients` | Admin | Create a client |
 | PUT | `/api/clients/address/:clientId` | Admin | Update client address |
 | PUT | `/api/clients/status/:clientId` | Admin | Update client status |
 | DELETE | `/api/clients/:clientId` | Admin | Delete a client |
-| POST | `/api/clients/care-plan/:clientId` | Admin | Upload care plan file |
-| GET | `/api/clients/care-plan/:clientId` | Auth | Download care plan file |
-| PUT | `/api/clients/care-plan/:clientId` | Admin | Replace care plan file |
-| DELETE | `/api/clients/care-plan/:clientId` | Admin | Delete care plan file |
-| PUT | `/api/clients/emergency-contact/:clientId` | Admin | Update emergency contact |
-| PUT | `/api/clients/note/:clientId` | Admin | Update client notes |
+| POST | `/api/clients/careplan/upload/:clientCode` | Admin | Upload care plan file |
+| GET | `/api/clients/careplan/download/:clientCode` | Auth | Download care plan file |
+| PUT | `/api/clients/careplan/:clientCode` | Admin | Replace care plan file |
+| DELETE | `/api/clients/careplan/:clientCode` | Admin | Delete care plan file |
+| PUT | `/api/clients/emergencycontact/:clientCode` | Admin | Update emergency contact |
+| PUT | `/api/clients/notes/:clientCode` | Admin | Update client notes |
 | POST | `/api/caregivers` | Admin | Create a caregiver |
 | GET | `/api/caregivers` | Admin | List all caregivers |
 | GET | `/api/caregivers/:caregiverId` | Auth | Get one caregiver |
@@ -56,19 +56,33 @@ Role-based access:
 | DELETE | `/api/caregivers/:caregiverId` | Admin | Delete a caregiver |
 | POST | `/api/caregivers/travel` | Auth | Calculate travel time between coordinates |
 | POST | `/api/schedules/assign` | Admin | Assign a shift to a caregiver |
+| POST | `/api/schedules/assign-batch` | Admin | Assign multiple shifts to a caregiver |
+| POST | `/api/schedules/validate` | Admin | Dry-run validate a single assignment |
+| POST | `/api/schedules/validate-batch` | Admin | Dry-run validate a batch assignment |
+| GET | `/api/schedules/available-caregivers` | Admin | List eligible caregivers for a slot |
+| POST | `/api/schedules/available-caregivers-batch` | Admin | List eligible caregivers across slots |
+| GET | `/api/schedules/by-date` | Admin | List schedules by date or date range |
 | GET | `/api/schedules/me` | Auth | Get schedules for the logged-in caregiver |
-| GET | `/api/schedules/caregiver/:caregiverId` | Admin | Get schedules for a specific caregiver |
+| GET | `/api/schedules/caregiver/:employeeCode` | Admin | Get schedules for a caregiver (employee code) |
 | PUT | `/api/schedules/update/:scheduleId` | Admin | Update a schedule |
+| PUT | `/api/schedules/:scheduleId/reassign` | Admin | Reassign a schedule to another caregiver |
+| POST | `/api/schedules/:scheduleId/cancel` | Admin | Cancel a schedule |
 | POST | `/api/leave-requests/create` | Auth | Create a leave request |
 | GET | `/api/leave-requests/get` | Admin | List leave requests (optional status filter) |
 | GET | `/api/leave-requests/get/:employeeId` | Admin | Get leave requests for an employee |
 | GET | `/api/leave-requests/me` | Auth | Get leave requests for the logged-in caregiver |
 | PUT | `/api/leave-requests/update/admin` | Admin | Approve or reject a leave request |
-| PUT | `/api/leave-requests/update/caregiver` | Auth | Approve or reject a leave request |
+| PUT | `/api/leave-requests/update/caregiver` | Auth | Approve or reject a leave request (caregiver) |
+| PUT | `/api/leave-requests/update/caregiver/:leaveRequestId` | Auth | Caregiver cancel or update leave dates |
+| GET | `/api/leave-requests/check-affected-shifts` | Admin | Shifts overlapping a leave window |
 | GET | `/api/visits/today-shifts` | Auth | Get today's shifts for the logged-in caregiver |
-| GET | `/api/visits/future-shifts` | Auth | Get upcoming 14-day shifts for the logged-in caregiver |
+| GET | `/api/visits/upcoming-shifts` | Auth | Get upcoming 14-day shifts for the logged-in caregiver |
 | POST | `/api/visits/clock-in` | Auth | Clock in to a shift |
 | PUT | `/api/visits/clock-out` | Auth | Clock out of a shift |
+| GET | `/api/visits/caregivers-with-shift-today` | Admin | List caregivers with a shift today |
+| — | `/api/visit-logs/*` | same | Alias of `/api/visits/*` (same router) |
+| GET | `/api/uhie/health` | — | Uhie / Foundry chat health |
+| POST | `/api/uhie/chat` | Auth | Chat with the Uhie Foundry agent |
 
 ## Common response format
 
@@ -113,6 +127,22 @@ Placeholder endpoint for future HSE data import.
 {
   "success": true,
   "message": "HSE import endpoint ready"
+}
+```
+
+## 3) Database health check
+
+GET /api/health/db
+
+Confirms MongoDB is reachable (useful after deploy). Uses the `ensureDb` middleware.
+
+### Success response
+
+```json
+{
+  "success": true,
+  "message": "MongoDB connected",
+  "readyState": 1
 }
 ```
 
@@ -261,24 +291,11 @@ Requires authentication.
 }
 ```
 
-## 7) Health check
-
-GET /api/auth/health
-
-### Success response
-
-```json
-{
-  "success": true,
-  "message": "Backend service is running."
-}
-```
-
 ---
 
 # Client endpoints
 
-Most client routes require authentication and admin access. The exceptions are `GET /api/clients/:clientId` and `GET /api/clients/care-plan/:clientId`, which require authentication only.
+Most client routes require authentication and admin access. The exceptions are `GET /api/clients/:clientId` and `GET /api/clients/careplan/download/:clientCode`, which require authentication only.
 
 ## 1) Get all clients
 
@@ -429,14 +446,14 @@ DELETE /api/clients/:clientId
 
 ## 7) Upload care plan
 
-POST /api/clients/care-plan/:clientId
+POST /api/clients/careplan/upload/:clientCode
 
 Requires admin access. Accepts a multipart form upload with a single `file` field.
 
 Example:
 
 ```http
-POST /api/clients/care-plan/CL001
+POST /api/clients/careplan/upload/CL001
 Content-Type: multipart/form-data
 ```
 
@@ -464,7 +481,7 @@ Content-Type: multipart/form-data
 
 ## 8) Download care plan
 
-GET /api/clients/care-plan/:clientId
+GET /api/clients/careplan/download/:clientCode
 
 Requires authentication.
 
@@ -472,13 +489,13 @@ Returns the care plan file as a binary download with appropriate `Content-Dispos
 
 ## 9) Replace care plan
 
-PUT /api/clients/care-plan/:clientId
+PUT /api/clients/careplan/:clientCode
 
 Requires admin access. Accepts a multipart form upload with a single `file` field. Replaces an existing care plan file.
 
 ## 10) Delete care plan
 
-DELETE /api/clients/care-plan/:clientId
+DELETE /api/clients/careplan/:clientCode
 
 Requires admin access. Deletes the care plan file from storage and removes the reference from the client record.
 
@@ -497,7 +514,7 @@ Requires admin access. Deletes the care plan file from storage and removes the r
 
 ## 11) Update emergency contact
 
-PUT /api/clients/emergency-contact/:clientId
+PUT /api/clients/emergencycontact/:clientCode
 
 Requires admin access.
 
@@ -530,7 +547,7 @@ Requires admin access.
 
 ## 12) Update client notes
 
-PUT /api/clients/note/:clientId
+PUT /api/clients/notes/:clientCode
 
 Requires admin access.
 
@@ -694,7 +711,61 @@ Requires admin access.
 - 400: client or caregiver is not active
 - 404: client or caregiver not found
 
-## 2) Get my schedules
+## 2) Assign schedules in batch
+
+POST /api/schedules/assign-batch
+
+Requires admin access.
+
+### Request body
+
+```json
+{
+  "clientCode": "CL001",
+  "employeeCode": "EMP2002",
+  "slots": [
+    { "date": "2025-03-15", "startTime": "08:00", "endTime": "10:00" },
+    { "date": "2025-03-16", "startTime": "08:00", "endTime": "10:00" }
+  ],
+  "notes": "Optional"
+}
+```
+
+## 3) Validate assignment (dry-run)
+
+POST /api/schedules/validate
+
+Requires admin access. Same body fields as assign (`clientCode`, `employeeCode`, `date`, `startTime`, `endTime`). Does not create a schedule.
+
+## 4) Validate batch assignment (dry-run)
+
+POST /api/schedules/validate-batch
+
+Requires admin access. Body: `clientCode`, `employeeCode`, `slots`.
+
+## 5) Available caregivers for a slot
+
+GET /api/schedules/available-caregivers
+
+Requires admin access.
+
+Query: `clientCode`, `date`, `startTime`, `endTime`.
+
+## 6) Available caregivers for multiple slots
+
+POST /api/schedules/available-caregivers-batch
+
+Requires admin access. Body: `clientCode`, `slots`.
+
+## 7) Schedules by date
+
+GET /api/schedules/by-date
+
+Requires admin access.
+
+Query: `date`, or `start` and `end` for a range.
+
+## 8) Get my schedules
 
 GET /api/schedules/me
 
@@ -721,11 +792,11 @@ Requires authentication. Returns schedules for the logged-in caregiver.
 }
 ```
 
-## 3) Get schedules for a caregiver
+## 9) Get schedules for a caregiver
 
-GET /api/schedules/caregiver/:caregiverId
+GET /api/schedules/caregiver/:employeeCode
 
-Requires admin access. The `:caregiverId` parameter is the caregiver's employee code.
+Requires admin access. The path parameter is the caregiver's employee code. Optional query: `date`.
 
 Example:
 
@@ -733,7 +804,7 @@ Example:
 GET /api/schedules/caregiver/EMP2002
 ```
 
-## 4) Update a schedule
+## 10) Update a schedule
 
 PUT /api/schedules/update/:scheduleId
 
@@ -747,7 +818,9 @@ Requires admin access.
   "startTime": "09:00",
   "endTime": "17:00",
   "caregiver": "<caregiver-object-id>",
-  "status": "scheduled"
+  "employeeCode": "EMP2002",
+  "status": "scheduled",
+  "notes": "Optional"
 }
 ```
 
@@ -769,6 +842,26 @@ Requires admin access.
   }
 }
 ```
+
+## 11) Reassign a schedule
+
+PUT /api/schedules/:scheduleId/reassign
+
+Requires admin access.
+
+### Request body
+
+```json
+{
+  "employeeCode": "EMP2003"
+}
+```
+
+## 12) Cancel a schedule
+
+POST /api/schedules/:scheduleId/cancel
+
+Requires admin access. Cancels the schedule identified by `:scheduleId`.
 
 ---
 
@@ -913,11 +1006,27 @@ Requires authentication.
 
 Uses the same request body and response format as the admin update endpoint.
 
+## 7) Caregiver cancel or update leave dates
+
+PUT /api/leave-requests/update/caregiver/:leaveRequestId
+
+Requires authentication.
+
+Query: `type` (action type). Body may include `caregiverCode`, `startDate`, `endDate`.
+
+## 8) Check affected shifts
+
+GET /api/leave-requests/check-affected-shifts
+
+Requires admin access. Returns shifts that overlap a leave window.
+
+Query: `employeeCode`, `startDate`, `endDate`.
+
 ---
 
 # Visit log endpoints
 
-These endpoints support caregiver clock-in and clock-out flow.
+These endpoints support caregiver clock-in and clock-out flow. The same router is mounted at both `/api/visits` and `/api/visit-logs` (paths below use `/api/visits`).
 
 ## 1) Get today’s shifts
 
@@ -949,7 +1058,7 @@ Requires authentication.
 
 ## 2) Get upcoming 14-day shifts
 
-GET /api/visits/future-shifts
+GET /api/visits/upcoming-shifts
 
 Requires authentication. Returns shifts for today and the following 13 days for the logged-in caregiver. Completed (clocked-out) shifts are excluded from the response.
 
@@ -1045,6 +1154,110 @@ PUT /api/visits/clock-out
 
 - The server validates the caregiver’s ownership of the visit and the 200m location rule.
 - Early or late clock-out without a note may be rejected.
+
+## 5) Caregivers with a shift today
+
+GET /api/visits/caregivers-with-shift-today
+
+Requires admin access. Returns caregivers who have at least one shift scheduled for today.
+
+---
+
+# Uhie chat endpoints
+
+Chat with the Microsoft Foundry agent (Uhie). Requires `FOUNDRY_ENDPOINT` and `FOUNDRY_AGENT_NAME` in the server environment.
+
+| Variable | Description |
+|----------|-------------|
+| `FOUNDRY_ENDPOINT` | Foundry **project** endpoint, e.g. `https://<resource>.services.ai.azure.com/api/projects/<project-name>` |
+| `FOUNDRY_AGENT_NAME` | Name of the agent in that project |
+
+Auth to Foundry uses `DefaultAzureCredential` (Azure CLI / managed identity / env credentials on the host).
+
+## 1) Health check
+
+GET /api/uhie/health
+
+Optional query: `?deep=1` (or `true`) — also calls Foundry to resolve the agent.
+
+### Success response
+
+```json
+{
+  "success": true,
+  "status": "ok",
+  "service": "uhie-chat",
+  "foundryConfigured": true,
+  "agentName": "Uhie",
+  "timestamp": "2026-08-26T17:00:00.000Z"
+}
+```
+
+With `deep=1`, an `agent` object may be included (`name`, `version`). If Foundry is missing or unreachable, the response uses `status: "degraded"` and HTTP 503.
+
+## 2) Chat
+
+POST /api/uhie/chat
+
+Requires authentication.
+
+### Request body
+
+```json
+{
+  "message": "How do I request sick leave?",
+  "history": [
+    { "role": "user", "content": "Hi" },
+    { "role": "assistant", "content": "Hello — how can I help?" }
+  ],
+  "user": {
+    "fullName": "Joel Montuya",
+    "employeeCode": "EMP001",
+    "role": "caregiver"
+  }
+}
+```
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `message` | Yes | Current user message |
+| `history` | No | Recent turns (`role` + `content` / `text` / `message`). Last 12 are sent to the agent |
+| `user` | No | Signed-in context for the agent. If omitted, values are taken from the JWT (`fullName`, `employeeCode`, `role`) when present |
+
+### Success response
+
+```json
+{
+  "success": true,
+  "response": "You can report and request sick leave like this:\n\n1. Phone the roster/office...\n2. Submit a sick leave request in the app...",
+  "references": {
+    "1": "HR Leave Balances Policy",
+    "2": "HR Onboarding Guide"
+  }
+}
+```
+
+| Field | Description |
+|-------|-------------|
+| `response` | Assistant answer with Foundry citation markers removed (no inline `[1]` / `【…†source】`) |
+| `references` | Map of `"1"`, `"2"`, … to knowledge-base document titles/filenames used for the answer. Azure internal labels such as `Answersynthesis` are omitted |
+
+The frontend can render `references` as a sources list (e.g. `[1] HR Leave Balances Policy`).
+
+### Error responses
+
+```json
+{ "success": false, "message": "Message is required" }
+```
+
+```json
+{
+  "success": false,
+  "message": "Foundry is not configured. Set FOUNDRY_ENDPOINT and FOUNDRY_AGENT_NAME."
+}
+```
+
+HTTP 500 if the Foundry call fails (`message` contains the error detail).
 
 ---
 
