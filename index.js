@@ -15,6 +15,7 @@ const scheduleRoutes = require("./routes/scheduleRoutes");
 const leaveRequestRoutes = require("./routes/leaveRequestRoutes");
 const visitLogRoutes = require("./routes/visitLogRoutes");
 const uhieChatRoutes = require("./routes/uhieChatRoutes");
+const uhieToolsRoutes = require("./routes/uhieToolsRoutes");
 const {
   checkUhieConnection,
 } = require("./services/uhieFoundryService");
@@ -57,10 +58,14 @@ app.get("/api/health/db", ensureDb, (req, res) => {
 });
 
 // Uhie chat (Foundry) — health does not need DB; mount before ensureDb
+// Chat stays JWT Bearer via protect — not x-api-key
 app.use("/api/uhie", uhieChatRoutes);
 
 // All API routes require a live MongoDB connection (important on Vercel serverless)
 app.use("/api", ensureDb);
+
+// Foundry OpenAPI tools — isolated x-api-key surface (not Bearer)
+app.use("/api/uhie/tools", uhieToolsRoutes);
 
 app.use("/api/visits", visitLogRoutes);
 app.use("/api/auth", authRoutes);

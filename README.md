@@ -83,6 +83,9 @@ Role-based access:
 | — | `/api/visit-logs/*` | same | Alias of `/api/visits/*` (same router) |
 | GET | `/api/uhie/health` | — | Uhie / Foundry chat health |
 | POST | `/api/uhie/chat` | Auth | Chat with the Uhie Foundry agent |
+| GET | `/api/uhie/tools/schedules/:employeeCode` | x-api-key | Foundry tool: caregiver schedules |
+| GET | `/api/uhie/tools/leave-requests/:employeeCode` | x-api-key | Foundry tool: leave list |
+| POST | `/api/uhie/tools/leave-requests` | x-api-key | Foundry tool: create leave |
 
 ## Common response format
 
@@ -1171,8 +1174,31 @@ Chat with the Microsoft Foundry agent (Uhie). Requires `FOUNDRY_ENDPOINT` and `F
 |----------|-------------|
 | `FOUNDRY_ENDPOINT` | Foundry **project** endpoint, e.g. `https://<resource>.services.ai.azure.com/api/projects/<project-name>` |
 | `FOUNDRY_AGENT_NAME` | Name of the agent in that project |
+| `FOUNDRY_TOOL_API_KEY` | Static key for **`/api/uhie/tools/*` only** (Foundry OpenAPI). Existing APIs stay Bearer JWT. |
 
 Auth to Foundry uses `DefaultAzureCredential` (Azure CLI / managed identity / env credentials on the host).
+
+## Foundry tools (isolated x-api-key)
+
+These routes are for the Foundry agent OpenAPI connector only. They do **not** accept Bearer JWT, and normal `/api/schedules` / `/api/leave-requests` routes do **not** accept `x-api-key`.
+
+| Method | Path | Header |
+|--------|------|--------|
+| GET | `/api/uhie/tools/schedules/:employeeCode` | `x-api-key: <FOUNDRY_TOOL_API_KEY>` |
+| GET | `/api/uhie/tools/leave-requests/:employeeCode` | `x-api-key: <FOUNDRY_TOOL_API_KEY>` |
+| POST | `/api/uhie/tools/leave-requests` | `x-api-key: <FOUNDRY_TOOL_API_KEY>` |
+
+POST body example:
+
+```json
+{
+  "employeeCode": "CG001",
+  "leaveType": "sick",
+  "startDate": "2026-08-28",
+  "endDate": "2026-08-29",
+  "reason": "Flu"
+}
+```
 
 ## 1) Health check
 
