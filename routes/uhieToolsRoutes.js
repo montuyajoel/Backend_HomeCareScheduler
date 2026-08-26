@@ -17,9 +17,36 @@ const {
   getPendingLeaveRequestsTool,
 } = require("../controllers/uhieToolsController");
 
+const TOOLS_VERSION = "3.0.0";
+
+// Public — verify deployment (no x-api-key)
+router.get("/health", (req, res) => {
+  res.status(200).json({
+    success: true,
+    service: "uhie-foundry-tools",
+    version: TOOLS_VERSION,
+    adminToolsEnabled: true,
+    caregiverToolsEnabled: true,
+    operations: {
+      caregiver: [
+        "getCaregiverSchedules",
+        "getCaregiverLeaveRequests",
+        "createCaregiverLeaveRequest",
+      ],
+      admin: [
+        "findAvailableCaregivers",
+        "validateScheduleAssignment",
+        "assignSchedule",
+        "reassignSchedule",
+        "getPendingLeaveRequests",
+      ],
+    },
+  });
+});
+
 router.use(foundryToolAuth);
 
-// ??? Caregiver tools (actingRole=caregiver) ????????????????????????????????
+// Caregiver tools (actingRole=caregiver)
 
 router.get(
   "/caregiver/schedules/:employeeCode",
@@ -40,25 +67,17 @@ router.get("/schedules/:employeeCode", requireCaregiverTool, getSchedulesForCare
 router.get("/leave-requests/:employeeCode", requireCaregiverTool, getLeaveRequestsByEmployeeTool);
 router.post("/leave-requests", requireCaregiverTool, createLeaveRequestTool);
 
-// ??? Admin tools (actingRole=admin) ????????????????????????????????????????
+// Admin tools (actingRole=admin)
 
-// 1. Find suitable caregivers for a client shift
 router.get(
   "/admin/schedules/available-caregivers",
   requireAdminTool,
   findAvailableCaregiversTool
 );
 
-// Optional validate before assign
 router.post("/admin/schedules/validate", requireAdminTool, validateScheduleAssignmentTool);
-
-// Proceed to add schedule after admin confirms caregiver + slot
 router.post("/admin/schedules/assign", requireAdminTool, assignScheduleTool);
-
-// 2. Reassign an existing shift
 router.put("/admin/schedules/:scheduleId/reassign", requireAdminTool, reassignScheduleTool);
-
-// 3. Pending leave requests
 router.get("/admin/leave-requests/pending", requireAdminTool, getPendingLeaveRequestsTool);
 
 module.exports = router;
