@@ -1,20 +1,31 @@
 /**
- * Foundry tool handlers — always HTTP 200 so OpenAPI tools do not surface
+ * Foundry tool handlers - always HTTP 200 so OpenAPI tools do not surface
  * raw status codes in chat. Use `success` and `message` in the JSON body.
+ *
+ * Caregiver tools: /api/uhie/tools/caregiver/*
+ * Admin tools:      /api/uhie/tools/admin/*
  */
 const schedule = require("../models/Schedule");
 const caregiver = require("../models/Caregiver");
 const LeaveRequest = require("../models/LeaveRequests");
 const { getStartOfDay, getEndOfDay } = require("../utils/irelandTime");
+const { sendToolResult, invokeController } = require("../utils/foundryToolHelpers");
 const {
   createLeaveRequest,
+  getLeaveRequests,
 } = require("./leaveRequestController");
+const {
+  getAvailableCaregivers,
+  validateScheduleAssignment,
+  reassignSchedule,
+} = require("./scheduleController");
+const { assignScheduleToCaregiver } = require("./assignScheduleToCaregiverController");
 
-const sendToolResult = (res, payload) => res.status(200).json(payload);
+// Caregiver tools
 
 const getSchedulesForCaregiverTool = async (req, res) => {
   try {
-    const { employeeCode } = req.params;
+    const employeeCode = req.params.employeeCode || req.user?.employeeCode;
     const { date } = req.query;
 
     const caregiverDoc = await caregiver.findOne({ employeeCode });
@@ -70,17 +81,7 @@ const getSchedulesForCaregiverTool = async (req, res) => {
 
 const getLeaveRequestsByEmployeeTool = async (req, res) => {
   try {
-    const { employeeCode } = req.params;
-
-    const caregiverDoc = await caregiver.findOne({ employeeCode });
-    if (!caregiverDoc) {
-      return sendToolResult(res, {
-        success: false,
-        message: `Caregiver ${employeeCode} not found.`,
-        count: 0,
-        data: [],
-      });
-    }
+    const employeeCode = req.params.employeeCode || req.user?.employeeCode;
 
     const leaveRequests = await LeaveRequest.find({ employeeCode }).sort({
       startDate: 1,
@@ -115,32 +116,45 @@ const getLeaveRequestsByEmployeeTool = async (req, res) => {
 };
 
 const createLeaveRequestTool = async (req, res) => {
-  let body = { success: false, message: "Unable to create leave request." };
-
-  const proxy = {
-    status() {
-      return proxy;
-    },
-    json(payload) {
-      body = payload;
-      return proxy;
-    },
-  };
-
-  try {
-    await createLeaveRequest(req, proxy);
-    return sendToolResult(res, body);
-  } catch (error) {
-    console.error("Error creating leave request (Foundry tool):", error);
+  const acting = req.user?.employeeCode;
+  if (req.body?.employeeCode && acting && req.body.employeeCode !== acting) {
     return sendToolResult(res, {
       success: false,
-      message: "Unable to create leave request right now.",
+      message: "Caregivers may only file leave for their own employeeCode.",
     });
   }
+  if (acting && !req.body?.employeeCode) {
+    req.body = { ...req.body, employeeCode: acting };
+  }
+  return invokeController(createLeaveRequest, req, res);
+};
+
+// Admin tools
+
+const findAvailableCaregiversTool = (req, res) =>
+  invokeController(getAvailableCaregivers, req, res);
+
+const validateScheduleAssignmentTool = (req, res) =>
+  invokeController(validateScheduleAssignment, req, res);
+
+const assignScheduleTool = (req, res) =>
+  invokeController(assignScheduleToCaregiver, req, res);
+
+const reassignScheduleTool = (req, res) =>
+  invokeController(reassignSchedule, req, res);
+
+const getPendingLeaveRequestsTool = (req, res) => {
+  req.query = { ...req.query, status: "pending" };
+  return invokeController(getLeaveRequests, req, res);
 };
 
 module.exports = {
   getSchedulesForCaregiverTool,
   getLeaveRequestsByEmployeeTool,
   createLeaveRequestTool,
+  findAvailableCaregiversTool,
+  validateScheduleAssignmentTool,
+  assignScheduleTool,
+  reassignScheduleTool,
+  getPendingLeaveRequestsTool,
 };

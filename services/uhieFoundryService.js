@@ -37,6 +37,16 @@ function buildAgentInput({ message, history = [], user }) {
     );
   }
 
+  lines.push(
+    [
+      "HomeCare OpenAPI tools are split by role. Always pass actingRole and actingEmployeeCode from signed-in user context on every tool call.",
+      "Caregiver tools (actingRole=caregiver): getCaregiverSchedules, getCaregiverLeaveRequests, createCaregiverLeaveRequest — only for the signed-in caregiver.",
+      "Admin tools (actingRole=admin): findAvailableCaregivers, validateScheduleAssignment, assignSchedule, reassignSchedule, getPendingLeaveRequests.",
+      "Admin scheduling flow: findAvailableCaregivers → optionally validateScheduleAssignment → assignSchedule after admin confirms.",
+      "Before assignSchedule or reassignSchedule, confirm client, caregiver, date, and times with the admin user.",
+    ].join(" ")
+  );
+
   if (Array.isArray(history) && history.length > 0) {
     lines.push("Recent conversation:");
     for (const turn of history.slice(-12)) {

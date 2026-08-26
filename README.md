@@ -83,9 +83,14 @@ Role-based access:
 | — | `/api/visit-logs/*` | same | Alias of `/api/visits/*` (same router) |
 | GET | `/api/uhie/health` | — | Uhie / Foundry chat health |
 | POST | `/api/uhie/chat` | Auth | Chat with the Uhie Foundry agent |
-| GET | `/api/uhie/tools/schedules/:employeeCode` | x-api-key | Foundry tool: caregiver schedules |
-| GET | `/api/uhie/tools/leave-requests/:employeeCode` | x-api-key | Foundry tool: leave list |
-| POST | `/api/uhie/tools/leave-requests` | x-api-key | Foundry tool: create leave |
+| GET | `/api/uhie/tools/caregiver/schedules/:employeeCode` | x-api-key | Caregiver: view own shifts |
+| GET | `/api/uhie/tools/caregiver/leave-requests/:employeeCode` | x-api-key | Caregiver: view own leave |
+| POST | `/api/uhie/tools/caregiver/leave-requests` | x-api-key | Caregiver: file leave |
+| GET | `/api/uhie/tools/admin/schedules/available-caregivers` | x-api-key | Admin: find suitable caregivers |
+| POST | `/api/uhie/tools/admin/schedules/validate` | x-api-key | Admin: validate assignment |
+| POST | `/api/uhie/tools/admin/schedules/assign` | x-api-key | Admin: assign shift |
+| PUT | `/api/uhie/tools/admin/schedules/:scheduleId/reassign` | x-api-key | Admin: reassign shift |
+| GET | `/api/uhie/tools/admin/leave-requests/pending` | x-api-key | Admin: pending leave list |
 
 ## Common response format
 
@@ -1186,11 +1191,29 @@ OpenAPI spec for Foundry: `docs/foundry-openapi-connector.json`
 
 Tool routes always return **HTTP 200** (Foundry fails on 404/400/500). Check `success` and `data` in the JSON body.
 
-| Method | Path | Header |
-|--------|------|--------|
-| GET | `/api/uhie/tools/schedules/:employeeCode` | `x-api-key: <FOUNDRY_TOOL_API_KEY>` |
-| GET | `/api/uhie/tools/leave-requests/:employeeCode` | `x-api-key: <FOUNDRY_TOOL_API_KEY>` |
-| POST | `/api/uhie/tools/leave-requests` | `x-api-key: <FOUNDRY_TOOL_API_KEY>` |
+Pass **`actingRole`** and **`actingEmployeeCode`** from signed-in chat context on every tool call (query for GET, body for POST/PUT). Caregiver tools reject mismatched `employeeCode`; admin tools require a registered admin profile.
+
+### Caregiver tools (`actingRole=caregiver`)
+
+| Method | Path |
+|--------|------|
+| GET | `/api/uhie/tools/caregiver/schedules/:employeeCode?actingRole=caregiver&actingEmployeeCode=` |
+| GET | `/api/uhie/tools/caregiver/leave-requests/:employeeCode?actingRole=caregiver&actingEmployeeCode=` |
+| POST | `/api/uhie/tools/caregiver/leave-requests` |
+
+Legacy paths `/api/uhie/tools/schedules/*` and `/api/uhie/tools/leave-requests` still work with the same caregiver role checks.
+
+### Admin tools (`actingRole=admin`)
+
+| Method | Path | Purpose |
+|--------|------|---------|
+| GET | `/api/uhie/tools/admin/schedules/available-caregivers?clientCode=&date=&startTime=&endTime=` | Find suitable caregivers for a shift |
+| POST | `/api/uhie/tools/admin/schedules/validate` | Optional: validate before assign |
+| POST | `/api/uhie/tools/admin/schedules/assign` | Add schedule after admin confirms |
+| PUT | `/api/uhie/tools/admin/schedules/:scheduleId/reassign` | Reassign shift to another caregiver |
+| GET | `/api/uhie/tools/admin/leave-requests/pending` | List pending leave requests |
+
+Admin scheduling flow: **findAvailableCaregivers** → (optional **validateScheduleAssignment**) → **assignSchedule**.
 
 POST body example:
 

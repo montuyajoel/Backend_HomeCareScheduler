@@ -2,8 +2,8 @@
   "openapi": "3.0.3",
   "info": {
     "title": "HomeCare Uhie Foundry Tools",
-    "version": "2.0.0",
-    "description": "Isolated Foundry tool API on Vercel. Auth is x-api-key only. Existing HomeCare /api/* routes remain Bearer JWT and are NOT exposed here."
+    "version": "3.0.0",
+    "description": "Role-isolated Foundry tool API. Pass actingRole and actingEmployeeCode from signed-in chat context on every call. Caregiver and admin tools are on separate paths. All responses use HTTP 200 — check success and message in the body."
   },
   "servers": [
     {
@@ -11,88 +11,180 @@
       "description": "Production Vercel Foundry tools"
     }
   ],
-  "security": [
-    {
-      "apiKeyHeader": []
-    }
-  ],
+  "security": [{ "apiKeyHeader": [] }],
   "tags": [
-    { "name": "schedules" },
-    { "name": "leave" }
+    { "name": "caregiver" },
+    { "name": "admin-schedules" },
+    { "name": "admin-leave" }
   ],
   "paths": {
-    "/schedules/{employeeCode}": {
+    "/caregiver/schedules/{employeeCode}": {
       "get": {
-        "tags": ["schedules"],
-        "operationId": "getSchedulesForCaregiver",
-        "summary": "Get schedules for a caregiver by employeeCode",
+        "tags": ["caregiver"],
+        "operationId": "getCaregiverSchedules",
+        "summary": "Get shifts for the signed-in caregiver",
         "parameters": [
+          { "$ref": "#/components/parameters/employeeCodePath" },
+          { "$ref": "#/components/parameters/actingRoleCaregiver" },
+          { "$ref": "#/components/parameters/actingEmployeeCode" },
           {
-            "name": "employeeCode",
-            "in": "path",
+            "name": "date",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string", "format": "date" },
+            "description": "Optional YYYY-MM-DD filter"
+          }
+        ],
+        "responses": { "200": { "description": "Always HTTP 200" } }
+      }
+    },
+    "/caregiver/leave-requests/{employeeCode}": {
+      "get": {
+        "tags": ["caregiver"],
+        "operationId": "getCaregiverLeaveRequests",
+        "summary": "List leave requests for the signed-in caregiver",
+        "parameters": [
+          { "$ref": "#/components/parameters/employeeCodePath" },
+          { "$ref": "#/components/parameters/actingRoleCaregiver" },
+          { "$ref": "#/components/parameters/actingEmployeeCode" }
+        ],
+        "responses": { "200": { "description": "Always HTTP 200" } }
+      }
+    },
+    "/caregiver/leave-requests": {
+      "post": {
+        "tags": ["caregiver"],
+        "operationId": "createCaregiverLeaveRequest",
+        "summary": "File leave for the signed-in caregiver",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateLeaveRequestBody" }
+            }
+          }
+        },
+        "responses": { "200": { "description": "Always HTTP 200" } }
+      }
+    },
+    "/admin/schedules/available-caregivers": {
+      "get": {
+        "tags": ["admin-schedules"],
+        "operationId": "findAvailableCaregivers",
+        "summary": "Find suitable caregivers for a client shift slot",
+        "description": "Step 1 of scheduling: returns eligible and ineligible caregivers with reasons. Use before assignSchedule.",
+        "parameters": [
+          { "$ref": "#/components/parameters/actingRoleAdmin" },
+          { "$ref": "#/components/parameters/actingEmployeeCode" },
+          {
+            "name": "clientCode",
+            "in": "query",
             "required": true,
             "schema": { "type": "string" }
           },
           {
             "name": "date",
             "in": "query",
-            "required": false,
-            "schema": { "type": "string", "format": "date" },
-            "description": "Optional Ireland-local calendar day filter (YYYY-MM-DD)"
+            "required": true,
+            "schema": { "type": "string", "format": "date" }
+          },
+          {
+            "name": "startTime",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "HH:mm"
+          },
+          {
+            "name": "endTime",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "HH:mm"
           }
         ],
-        "responses": {
-          "200": { "description": "Always HTTP 200; check success and data in body" }
-        }
+        "responses": { "200": { "description": "Always HTTP 200" } }
       }
     },
-    "/leave-requests/{employeeCode}": {
-      "get": {
-        "tags": ["leave"],
-        "operationId": "getLeaveRequestsByEmployee",
-        "summary": "List leave requests for an employeeCode",
+    "/admin/schedules/validate": {
+      "post": {
+        "tags": ["admin-schedules"],
+        "operationId": "validateScheduleAssignment",
+        "summary": "Validate a caregiver can be assigned to a client shift",
+        "description": "Optional step before assignSchedule.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ScheduleAssignmentBody" }
+            }
+          }
+        },
+        "responses": { "200": { "description": "Always HTTP 200" } }
+      }
+    },
+    "/admin/schedules/assign": {
+      "post": {
+        "tags": ["admin-schedules"],
+        "operationId": "assignSchedule",
+        "summary": "Assign a caregiver to a client shift",
+        "description": "Step 2 after findAvailableCaregivers — confirm with admin before calling.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ScheduleAssignmentBody" }
+            }
+          }
+        },
+        "responses": { "200": { "description": "Always HTTP 200" } }
+      }
+    },
+    "/admin/schedules/{scheduleId}/reassign": {
+      "put": {
+        "tags": ["admin-schedules"],
+        "operationId": "reassignSchedule",
+        "summary": "Reassign an existing shift to another caregiver",
         "parameters": [
           {
-            "name": "employeeCode",
+            "name": "scheduleId",
             "in": "path",
             "required": true,
             "schema": { "type": "string" }
           }
         ],
-        "responses": {
-          "200": { "description": "Always HTTP 200; check success and data in body" }
-        }
-      }
-    },
-    "/leave-requests": {
-      "post": {
-        "tags": ["leave"],
-        "operationId": "createLeaveRequest",
-        "summary": "Create a leave request for an employeeCode",
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["employeeCode", "leaveType", "startDate", "endDate"],
+                "required": ["employeeCode", "actingRole", "actingEmployeeCode"],
                 "properties": {
-                  "employeeCode": { "type": "string" },
-                  "leaveType": {
+                  "employeeCode": {
                     "type": "string",
-                    "enum": ["vacation", "sick", "emergency", "other"]
+                    "description": "New caregiver employeeCode"
                   },
-                  "startDate": { "type": "string", "format": "date" },
-                  "endDate": { "type": "string", "format": "date" },
-                  "reason": { "type": "string" }
+                  "actingRole": { "type": "string", "enum": ["admin"] },
+                  "actingEmployeeCode": { "type": "string" }
                 }
               }
             }
           }
         },
-        "responses": {
-          "200": { "description": "Always HTTP 200; check success in body" }
-        }
+        "responses": { "200": { "description": "Always HTTP 200" } }
+      }
+    },
+    "/admin/leave-requests/pending": {
+      "get": {
+        "tags": ["admin-leave"],
+        "operationId": "getPendingLeaveRequests",
+        "summary": "List all pending leave requests",
+        "parameters": [
+          { "$ref": "#/components/parameters/actingRoleAdmin" },
+          { "$ref": "#/components/parameters/actingEmployeeCode" }
+        ],
+        "responses": { "200": { "description": "Always HTTP 200" } }
       }
     }
   },
@@ -102,6 +194,71 @@
         "type": "apiKey",
         "in": "header",
         "name": "x-api-key"
+      }
+    },
+    "parameters": {
+      "employeeCodePath": {
+        "name": "employeeCode",
+        "in": "path",
+        "required": true,
+        "schema": { "type": "string" },
+        "description": "Must match actingEmployeeCode for caregivers"
+      },
+      "actingRoleCaregiver": {
+        "name": "actingRole",
+        "in": "query",
+        "required": true,
+        "schema": { "type": "string", "enum": ["caregiver"] }
+      },
+      "actingRoleAdmin": {
+        "name": "actingRole",
+        "in": "query",
+        "required": true,
+        "schema": { "type": "string", "enum": ["admin"] }
+      },
+      "actingEmployeeCode": {
+        "name": "actingEmployeeCode",
+        "in": "query",
+        "required": true,
+        "schema": { "type": "string" },
+        "description": "Signed-in user employeeCode from chat context"
+      }
+    },
+    "schemas": {
+      "CreateLeaveRequestBody": {
+        "type": "object",
+        "required": ["actingRole", "actingEmployeeCode", "leaveType", "startDate", "endDate"],
+        "properties": {
+          "actingRole": { "type": "string", "enum": ["caregiver"] },
+          "actingEmployeeCode": { "type": "string" },
+          "employeeCode": { "type": "string" },
+          "leaveType": { "type": "string", "enum": ["vacation", "sick", "emergency"] },
+          "startDate": { "type": "string", "format": "date" },
+          "endDate": { "type": "string", "format": "date" },
+          "reason": { "type": "string" }
+        }
+      },
+      "ScheduleAssignmentBody": {
+        "type": "object",
+        "required": [
+          "actingRole",
+          "actingEmployeeCode",
+          "clientCode",
+          "employeeCode",
+          "date",
+          "startTime",
+          "endTime"
+        ],
+        "properties": {
+          "actingRole": { "type": "string", "enum": ["admin"] },
+          "actingEmployeeCode": { "type": "string" },
+          "clientCode": { "type": "string" },
+          "employeeCode": { "type": "string", "description": "Caregiver to assign" },
+          "date": { "type": "string", "format": "date" },
+          "startTime": { "type": "string" },
+          "endTime": { "type": "string" },
+          "notes": { "type": "string" }
+        }
       }
     }
   }
