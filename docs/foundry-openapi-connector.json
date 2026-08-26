@@ -1,0 +1,108 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "HomeCare Uhie Foundry Tools",
+    "version": "2.0.0",
+    "description": "Isolated Foundry tool API on Vercel. Auth is x-api-key only. Existing HomeCare /api/* routes remain Bearer JWT and are NOT exposed here."
+  },
+  "servers": [
+    {
+      "url": "https://backend-home-care-scheduler-api.vercel.app/api/uhie/tools",
+      "description": "Production Vercel Foundry tools"
+    }
+  ],
+  "security": [
+    {
+      "apiKeyHeader": []
+    }
+  ],
+  "tags": [
+    { "name": "schedules" },
+    { "name": "leave" }
+  ],
+  "paths": {
+    "/schedules/{employeeCode}": {
+      "get": {
+        "tags": ["schedules"],
+        "operationId": "getSchedulesForCaregiver",
+        "summary": "Get schedules for a caregiver by employeeCode",
+        "parameters": [
+          {
+            "name": "employeeCode",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "date",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string", "format": "date" },
+            "description": "Optional Ireland-local calendar day filter (YYYY-MM-DD)"
+          }
+        ],
+        "responses": {
+          "200": { "description": "Always HTTP 200; check success and data in body" }
+        }
+      }
+    },
+    "/leave-requests/{employeeCode}": {
+      "get": {
+        "tags": ["leave"],
+        "operationId": "getLeaveRequestsByEmployee",
+        "summary": "List leave requests for an employeeCode",
+        "parameters": [
+          {
+            "name": "employeeCode",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Always HTTP 200; check success and data in body" }
+        }
+      }
+    },
+    "/leave-requests": {
+      "post": {
+        "tags": ["leave"],
+        "operationId": "createLeaveRequest",
+        "summary": "Create a leave request for an employeeCode",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["employeeCode", "leaveType", "startDate", "endDate"],
+                "properties": {
+                  "employeeCode": { "type": "string" },
+                  "leaveType": {
+                    "type": "string",
+                    "enum": ["vacation", "sick", "emergency", "other"]
+                  },
+                  "startDate": { "type": "string", "format": "date" },
+                  "endDate": { "type": "string", "format": "date" },
+                  "reason": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Always HTTP 200; check success in body" }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "apiKeyHeader": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "x-api-key"
+      }
+    }
+  }
+}

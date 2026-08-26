@@ -1,6 +1,6 @@
 /**
- * Foundry tool handlers â€” same data as core APIs, but 200 + empty results
- * instead of 404 so OpenAPI tools do not fail on "no schedules".
+ * Foundry tool handlers — always HTTP 200 so OpenAPI tools do not surface
+ * raw status codes in chat. Use `success` and `message` in the JSON body.
  */
 const schedule = require("../models/Schedule");
 const caregiver = require("../models/Caregiver");
@@ -10,6 +10,8 @@ const {
   createLeaveRequest,
 } = require("./leaveRequestController");
 
+const sendToolResult = (res, payload) => res.status(200).json(payload);
+
 const getSchedulesForCaregiverTool = async (req, res) => {
   try {
     const { employeeCode } = req.params;
@@ -17,9 +19,11 @@ const getSchedulesForCaregiverTool = async (req, res) => {
 
     const caregiverDoc = await caregiver.findOne({ employeeCode });
     if (!caregiverDoc) {
-      return res.status(404).json({
+      return sendToolResult(res, {
         success: false,
         message: `Caregiver ${employeeCode} not found.`,
+        count: 0,
+        data: [],
       });
     }
 
@@ -33,22 +37,33 @@ const getSchedulesForCaregiverTool = async (req, res) => {
       .populate("client", "fullName clientCode")
       .sort({ date: 1, startTime: 1 });
 
-    return res.status(200).json({
+    if (schedules.length === 0) {
+      const dateHint = date ? ` on ${date}` : "";
+      return sendToolResult(res, {
+        success: true,
+        caregiverEmployeeCode: caregiverDoc.employeeCode,
+        caregiverName: caregiverDoc.fullName,
+        count: 0,
+        data: [],
+        message: `No shifts found for caregiver ${employeeCode}${dateHint}.`,
+      });
+    }
+
+    return sendToolResult(res, {
       success: true,
       caregiverEmployeeCode: caregiverDoc.employeeCode,
       caregiverName: caregiverDoc.fullName,
       count: schedules.length,
       data: schedules,
-      message:
-        schedules.length === 0
-          ? `No schedules found for caregiver ${employeeCode}${date ? ` on ${date}` : ""}.`
-          : undefined,
+      message: `Found ${schedules.length} shift(s) for caregiver ${employeeCode}${date ? ` on ${date}` : ""}.`,
     });
   } catch (error) {
     console.error("Error fetching schedules (Foundry tool):", error);
-    return res.status(500).json({
+    return sendToolResult(res, {
       success: false,
-      message: "An error occurred while fetching schedules for the caregiver.",
+      message: "Unable to retrieve schedules right now.",
+      count: 0,
+      data: [],
     });
   }
 };
@@ -59,9 +74,11 @@ const getLeaveRequestsByEmployeeTool = async (req, res) => {
 
     const caregiverDoc = await caregiver.findOne({ employeeCode });
     if (!caregiverDoc) {
-      return res.status(404).json({
+      return sendToolResult(res, {
         success: false,
         message: `Caregiver ${employeeCode} not found.`,
+        count: 0,
+        data: [],
       });
     }
 
@@ -69,20 +86,55 @@ const getLeaveRequestsByEmployeeTool = async (req, res) => {
       startDate: 1,
     });
 
-    return res.status(200).json({
+    if (leaveRequests.length === 0) {
+      return sendToolResult(res, {
+        success: true,
+        employeeCode,
+        count: 0,
+        data: [],
+        message: `No leave requests found for caregiver ${employeeCode}.`,
+      });
+    }
+
+    return sendToolResult(res, {
       success: true,
+      employeeCode,
       count: leaveRequests.length,
       data: leaveRequests,
-      message:
-        leaveRequests.length === 0
-          ? `No leave requests found for caregiver ${employeeCode}.`
-          : undefined,
+      message: `Found ${leaveRequests.length} leave request(s) for caregiver ${employeeCode}.`,
     });
   } catch (error) {
     console.error("Error fetching leave requests (Foundry tool):", error);
-    return res.status(500).json({
+    return sendToolResult(res, {
       success: false,
-      message: error.message,
+      message: "Unable to retrieve leave requests right now.",
+      count: 0,
+      data: [],
+    });
+  }
+};
+
+const createLeaveRequestTool = async (req, res) => {
+  let body = { success: false, message: "Unable to create leave request." };
+
+  const proxy = {
+    status() {
+      return proxy;
+    },
+    json(payload) {
+      body = payload;
+      return proxy;
+    },
+  };
+
+  try {
+    await createLeaveRequest(req, proxy);
+    return sendToolResult(res, body);
+  } catch (error) {
+    console.error("Error creating leave request (Foundry tool):", error);
+    return sendToolResult(res, {
+      success: false,
+      message: "Unable to create leave request right now.",
     });
   }
 };
@@ -90,5 +142,5 @@ const getLeaveRequestsByEmployeeTool = async (req, res) => {
 module.exports = {
   getSchedulesForCaregiverTool,
   getLeaveRequestsByEmployeeTool,
-  createLeaveRequest,
+  createLeaveRequestTool,
 };

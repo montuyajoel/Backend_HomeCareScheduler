@@ -1,5 +1,5 @@
 /**
- * Foundry OpenAPI tool surface â€” x-api-key only.
+ * Foundry OpenAPI tool surface — x-api-key only.
  * Does not use JWT `protect`; existing Bearer endpoints are untouched.
  */
 const express = require("express");
@@ -8,7 +8,7 @@ const { foundryToolAuth } = require("../middleware/foundryToolAuth");
 const {
   getSchedulesForCaregiverTool,
   getLeaveRequestsByEmployeeTool,
-  createLeaveRequest,
+  createLeaveRequestTool,
 } = require("../controllers/uhieToolsController");
 
 router.use(foundryToolAuth);
@@ -21,6 +21,6 @@ router.get("/leave-requests/:employeeCode", getLeaveRequestsByEmployeeTool);
 
 // POST /api/uhie/tools/leave-requests
 // Body: { employeeCode, leaveType, startDate, endDate, reason? }
-router.post("/leave-requests", createLeaveRequest);
+router.post("/leave-requests", createLeaveRequestTool);
 
 module.exports = router;

@@ -1182,6 +1182,10 @@ Auth to Foundry uses `DefaultAzureCredential` (Azure CLI / managed identity / en
 
 These routes are for the Foundry agent OpenAPI connector only. They do **not** accept Bearer JWT, and normal `/api/schedules` / `/api/leave-requests` routes do **not** accept `x-api-key`.
 
+OpenAPI spec for Foundry: `docs/foundry-openapi-connector.json`
+
+Tool routes always return **HTTP 200** (Foundry fails on 404/400/500). Check `success` and `data` in the JSON body.
+
 | Method | Path | Header |
 |--------|------|--------|
 | GET | `/api/uhie/tools/schedules/:employeeCode` | `x-api-key: <FOUNDRY_TOOL_API_KEY>` |
