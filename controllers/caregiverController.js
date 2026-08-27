@@ -4,8 +4,9 @@ creating, listing, fetching by code, updating, and deleting。
 Plus a travel-time computation endpoint.
 */
 const Caregiver = require("../models/Caregiver");
-const ComputeTravelTime = require("../utils/calculateTravelTime")
+const ComputeTravelTime = require("../utils/calculateTravelTime");
 const computeLatLong = require("../utils/geocodeStructuredAddress")
+
 //--------Create a new caregiver--------
 //controller handles request logic & database save
 const createCaregiver = async (req, res) => {
@@ -87,14 +88,11 @@ const updateCaregiver = async (req, res) => {
             employeeCode: caregiverId
         });
 
-        if (!existingCaregiver) {
-            return res.status(404).json({
-                success: false,
-                message: "Caregiver not found"
-            });
-        }
+        /*if (!updatedCaregiver) {
+            return res.status(404).json({ success: false, message: "Caregiver not found" });
+        }*/
 
-        // Prevent protected fields from being changed
+                // Prevent protected fields from being changed
         delete updateData._id;
         delete updateData.userId;
         delete updateData.employeeCode;
@@ -161,13 +159,9 @@ const updateCaregiver = async (req, res) => {
     
     } catch (error) {
         console.error("Error updating caregiver:", error);
-
-        return res.status(500).json({
-            success: false,
-            message: error.message
-        });
+        res.status(500).json({ success: false, message: error.message });
     }
-};
+}
 
 //------Delete caregiver by employeeCode (caregiverId) from db------
 const deleteCaregiver = async (req, res) => {
