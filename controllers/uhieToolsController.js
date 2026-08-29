@@ -38,7 +38,10 @@ const getSchedulesForCaregiverTool = async (req, res) => {
       });
     }
 
-    const query = { caregiver: caregiverDoc._id };
+    const query = {
+      caregiver: caregiverDoc._id,
+      status: { $ne: "cancelled" },
+    };
     if (date) {
       query.date = { $gte: getStartOfDay(date), $lte: getEndOfDay(date) };
     }

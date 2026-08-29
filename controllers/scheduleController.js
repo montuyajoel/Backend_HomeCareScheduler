@@ -92,7 +92,10 @@ const getSchedulesForCaregiver = async (req, res) => {
             return res.status(404).json({ success: false, message: `Caregiver ${employeeCode} not found.` });
         }
 
-        const query = { caregiver: caregiverExists._id };
+        const query = {
+            caregiver: caregiverExists._id,
+            status: { $ne: "cancelled" },
+        };
         if (date) {
             query.date = { $gte: getStartOfDay(date), $lte: getEndOfDay(date) };
         }
