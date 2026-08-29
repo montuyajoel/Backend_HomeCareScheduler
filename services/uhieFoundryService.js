@@ -3,6 +3,8 @@ const { AIProjectClient } = require("@azure/ai-projects");
 
 const endpoint = (process.env.FOUNDRY_ENDPOINT || "").trim().replace(/\/$/, "");
 const agentName = (process.env.FOUNDRY_AGENT_NAME || "").trim();
+/** Max prior turns forwarded to Foundry (server re-enforces client windowing). */
+const HISTORY_LIMIT = 12;
 
 let projectClient = null;
 
@@ -37,9 +39,19 @@ function buildAgentInput({ message, history = [], user }) {
     );
   }
 
+  lines.push(
+    [
+      "HomeCare OpenAPI tools are split by role. Always pass actingRole and actingEmployeeCode from signed-in user context on every tool call.",
+      "Caregiver tools (actingRole=caregiver): getCaregiverSchedules, getCaregiverLeaveRequests, createCaregiverLeaveRequest — only for the signed-in caregiver.",
+      "Admin tools (actingRole=admin): findAvailableCaregivers, validateScheduleAssignment, assignSchedule, reassignSchedule, getPendingLeaveRequests.",
+      "Admin scheduling flow: findAvailableCaregivers → optionally validateScheduleAssignment → assignSchedule after admin confirms.",
+      "Before assignSchedule or reassignSchedule, confirm client, caregiver, date, and times with the admin user.",
+    ].join(" ")
+  );
+
   if (Array.isArray(history) && history.length > 0) {
     lines.push("Recent conversation:");
-    for (const turn of history.slice(-12)) {
+    for (const turn of history.slice(-HISTORY_LIMIT)) {
       const role = turn.role || "user";
       const content = turn.content || turn.text || turn.message || "";
       if (content) lines.push(`${role}: ${content}`);
@@ -317,4 +329,5 @@ module.exports = {
   formatCitations,
   checkUhieConnection,
   agentName,
+  HISTORY_LIMIT,
 };

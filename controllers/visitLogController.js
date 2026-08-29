@@ -96,9 +96,11 @@ const getTodayShifts = async (req, res) => {
             const endOfDay = getEndOfDay();
 
             //sorted ascending by start time, earliest shift appears first
+            // Exclude cancelled schedules so admin cancel removes them from caregiver views
             const shifts = await Schedule.find({
                 caregiver: caregiverId,
                 date: { $gte: startOfDay, $lte: endOfDay },
+                status: { $ne: "cancelled" },
             })
                 .populate("client", "fullName clientCode address notes carePlan") //never populate phone field-privacy rule
                 .sort({ startTime: 1 });
@@ -204,6 +206,14 @@ const clockIn = async (req, res) => {
             return res.status(404).json({
                 success: false, message: "shift not found。 Please select a valid shift.",
             })
+        }
+
+        if (shift.status === "cancelled") {
+            return res.status(400).json({
+                success: false,
+                message: "This shift has been cancelled and can no longer be clocked into.",
+                code: "SHIFT_CANCELLED",
+            });
         }
 
         //---------1. Confirm this shift is actually assigned to the caregiver,

@@ -58,7 +58,7 @@ app.get("/api/health/db", ensureDb, (req, res) => {
 });
 
 // Uhie chat (Foundry) — health does not need DB; mount before ensureDb
-// Chat stays JWT Bearer via protect — not x-api-key
+// Chat route applies ensureDb + JWT protect internally — not x-api-key
 app.use("/api/uhie", uhieChatRoutes);
 
 // All API routes require a live MongoDB connection (important on Vercel serverless)

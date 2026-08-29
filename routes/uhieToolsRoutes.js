@@ -1,29 +1,83 @@
 /**
- * Foundry OpenAPI tool surface â€” x-api-key only.
- * Does not use JWT `protect`; existing Bearer endpoints are untouched.
+ * Foundry OpenAPI tool surface — x-api-key only.
+ * Caregiver and admin tools are isolated by path + actingRole checks.
  */
 const express = require("express");
 const router = express.Router();
 const { foundryToolAuth } = require("../middleware/foundryToolAuth");
-const { getSchedulesForCaregiver } = require("../controllers/scheduleController");
+const { requireAdminTool, requireCaregiverTool } = require("../middleware/foundryToolRole");
 const {
-  createLeaveRequest,
-  getLeaveRequestById,
-} = require("../controllers/leaveRequestController");
+  getSchedulesForCaregiverTool,
+  getLeaveRequestsByEmployeeTool,
+  createLeaveRequestTool,
+  findAvailableCaregiversTool,
+  validateScheduleAssignmentTool,
+  assignScheduleTool,
+  reassignScheduleTool,
+  getPendingLeaveRequestsTool,
+} = require("../controllers/uhieToolsController");
+
+const TOOLS_VERSION = "3.0.0";
+
+// Public — verify deployment (no x-api-key)
+router.get("/health", (req, res) => {
+  res.status(200).json({
+    success: true,
+    service: "uhie-foundry-tools",
+    version: TOOLS_VERSION,
+    adminToolsEnabled: true,
+    caregiverToolsEnabled: true,
+    operations: {
+      caregiver: [
+        "getCaregiverSchedules",
+        "getCaregiverLeaveRequests",
+        "createCaregiverLeaveRequest",
+      ],
+      admin: [
+        "findAvailableCaregivers",
+        "validateScheduleAssignment",
+        "assignSchedule",
+        "reassignSchedule",
+        "getPendingLeaveRequests",
+      ],
+    },
+  });
+});
 
 router.use(foundryToolAuth);
 
-// GET /api/uhie/tools/schedules/:employeeCode?date=YYYY-MM-DD
-router.get("/schedules/:employeeCode", getSchedulesForCaregiver);
+// Caregiver tools (actingRole=caregiver)
 
-// GET /api/uhie/tools/leave-requests/:employeeCode
-router.get("/leave-requests/:employeeCode", (req, res, next) => {
-  req.params.employeeId = req.params.employeeCode;
-  return getLeaveRequestById(req, res, next);
-});
+router.get(
+  "/caregiver/schedules/:employeeCode",
+  requireCaregiverTool,
+  getSchedulesForCaregiverTool
+);
 
-// POST /api/uhie/tools/leave-requests
-// Body: { employeeCode, leaveType, startDate, endDate, reason? }
-router.post("/leave-requests", createLeaveRequest);
+router.get(
+  "/caregiver/leave-requests/:employeeCode",
+  requireCaregiverTool,
+  getLeaveRequestsByEmployeeTool
+);
+
+router.post("/caregiver/leave-requests", requireCaregiverTool, createLeaveRequestTool);
+
+// Legacy caregiver paths (backward compatible)
+router.get("/schedules/:employeeCode", requireCaregiverTool, getSchedulesForCaregiverTool);
+router.get("/leave-requests/:employeeCode", requireCaregiverTool, getLeaveRequestsByEmployeeTool);
+router.post("/leave-requests", requireCaregiverTool, createLeaveRequestTool);
+
+// Admin tools (actingRole=admin)
+
+router.get(
+  "/admin/schedules/available-caregivers",
+  requireAdminTool,
+  findAvailableCaregiversTool
+);
+
+router.post("/admin/schedules/validate", requireAdminTool, validateScheduleAssignmentTool);
+router.post("/admin/schedules/assign", requireAdminTool, assignScheduleTool);
+router.put("/admin/schedules/:scheduleId/reassign", requireAdminTool, reassignScheduleTool);
+router.get("/admin/leave-requests/pending", requireAdminTool, getPendingLeaveRequestsTool);
 
 module.exports = router;

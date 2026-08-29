@@ -47,9 +47,11 @@ const getUpcoming2WeeksShifts = async (req, res) => {
         const endDate = getEndOfDay(addDays(startDate, 13));
 
         //sorted ascending by date and start time
+        // Exclude cancelled schedules so admin cancel removes them from caregiver views
         const shifts = await Schedule.find({
             caregiver: caregiverId,
             date: { $gte: startDate, $lte: endDate },
+            status: { $ne: "cancelled" },
         })
             .populate("client", "fullName clientCode address notes carePlan") //never populate phone field-privacy rule
             .sort({ date: 1, startTime: 1 });
